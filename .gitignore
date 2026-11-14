@@ -1,0 +1,17 @@
+# Personal profiles, generated resumes, and local workflows
+*.pdf
+Profile*.pdf
+master_profile_daniel_molnar.md
+*.local.md
+*.local.json
+config.local.json
+jobfinder_n8n_workflow.local.json
+seen_jobs.json
+
+# Environment and secrets
+.env
+.env.*
+
+# Python cache
+__pycache__/
+*.pyc

@@ -1,0 +1,20 @@
+name: gotenberg
+services:
+  gotenberg:
+    image: gotenberg/gotenberg:8
+    container_name: gotenberg
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    command:
+      - "gotenberg"
+      - "--chromium-disable-javascript=true"
+      - "--api-timeout=60s"
+    x-casaos:
+      title:
+        en_us: Gotenberg PDF Engine
+      icon: https://gotenberg.dev/logo.png
+      tagline:
+        en_us: HTML to PDF converter for n8n JobFinder
+      category: Developer
+      port_map: "3000"

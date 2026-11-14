@@ -1,0 +1,35 @@
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: jobfinder-n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      - GENERIC_TIMEZONE=Europe/Budapest
+      - TZ=Europe/Budapest
+    volumes:
+      - n8n_data:/home/node/.n8n
+    depends_on:
+      - gotenberg
+    networks:
+      - jobfinder-net
+
+  gotenberg:
+    image: gotenberg/gotenberg:8
+    container_name: gotenberg
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    command:
+      - "gotenberg"
+      - "--chromium-disable-javascript=true"
+      - "--api-timeout=60s"
+    networks:
+      - jobfinder-net
+
+volumes:
+  n8n_data:
+
+networks:
+  jobfinder-net:

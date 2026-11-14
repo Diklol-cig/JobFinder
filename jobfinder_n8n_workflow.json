@@ -1,0 +1,1245 @@
+{
+  "name": "JobFinder AI - Automated Job Search and ATS CV Generator",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 🚀 JobFinder AI — Self-Hosted n8n Job Hunter (100% Free Stack)\n### Quick Setup via n8n Credentials Tab:\n1. Open n8n **Credentials** (left sidebar) and create 2 free credentials:\n   - **Google Gemini(PaLM) Api**: Paste your free Google AI Studio key (`https://aistudio.google.com/apikey`), keep default host `https://generativelanguage.googleapis.com`\n   - **Discord Webhook**: Paste your Discord channel Webhook URL\n2. Select those credentials in the **Gemini** and **Discord** nodes (marked in orange until linked).\n3. Check candidate info, languages, and `gotenberg_url` (`http://gotenberg:3000`) in **`Initialize Profile and Settings`**, then click **Test workflow**.\n4. **Job Categories**: Tier 1 AI & n8n Automation, Enterprise/MES & API Integration; Tier 2 Observability/Linux/DevOps & Technical Solutions.\n5. **Scoring & Pings**: `70+` with valid/unspecified location generates **EN + Hungarian ATS PDF CVs**, saves to `/home/node/.n8n`, and pings `@everyone` in Discord. `50-69` sends a quiet 'Maybe' alert (no `@everyone`). Explicit office violations are dropped (`SKIPPED`).",
+        "height": 300,
+        "width": 680,
+        "color": 4
+      },
+      "id": "fdb74c73-dd66-5456-b6b7-41eb5b7c2fcf",
+      "name": "Sticky Note - Setup and Config",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        -260
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 🔎 Stage 1: Multi-Source Scraping & Pre-Filter\n- **LinkedIn Guest API**: Searches configured target locations and regional radius queries across non-SWE integration/automation/DevOps tracks.\n- **NoFluffJobs JSON API**: Pulls configured city and English Remote roles.\n- **Zero-Cost Deduplication**: Checks `/home/node/.n8n/seen_jobs.json` + workflow static data and filters out excluded industries, SWE developer titles, junior, and unrelated stack titles before calling Gemini.",
+        "height": 210,
+        "width": 760,
+        "color": 5
+      },
+      "id": "36236e8a-e234-509b-8a40-04e6a8b342bf",
+      "name": "Sticky Note - Scraping and Dedup",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        80,
+        -260
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 🧠 Stage 2: 4-Part Rubric & Strict Location Gate\n- Processes 1 new job at a time with a **4s Wait** node to stay under free-tier 15 RPM limits.\n- Uses `gemini-3.5-flash-lite` + deterministic JS enforcement: **Role 35 + Tech 30 + AI-Proof Security 20 + Location/Comp 15**.\n- Drops explicit office/location failures (`SKIPPED`), warns when office/HO days are unspecified (`-5` pts), and pings `@everyone` only when CVs are generated.",
+        "height": 210,
+        "width": 860,
+        "color": 6
+      },
+      "id": "0f62a958-b6a4-5457-9817-dbba8d13e320",
+      "name": "Sticky Note - Scoring and Routing",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        920,
+        -260
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 📄 Stage 3: Configurable ATS CV & Cover Letter PDF Pipeline\n- Uses `gemini-3.5-flash-lite` (free tier) to write tailored **English + Hungarian** CVs (and Cover Letters when requested).\n- Renders clean single-column ATS HTML to convert to PDF via **Gotenberg** (`http://gotenberg:3000`) to save to `/home/node/.n8n/JobFinder_[Date]_[Filename]` and upload PDFs to **Discord**.",
+        "height": 210,
+        "width": 980,
+        "color": 4
+      },
+      "id": "578bdb45-28a2-5ff9-84de-ef997bd0f6d4",
+      "name": "Sticky Note - PDF Generation",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1860,
+        -260
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "30 7 * * *"
+            }
+          ]
+        }
+      },
+      "id": "66d0a2c5-1b85-5f6d-a322-9595ea8e11cc",
+      "name": "Daily 0730 Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -580,
+        120
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "22fedbaa-1ff0-5a65-8916-b7c04f491b72",
+      "name": "Manual Test Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -580,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "return [{\n  json: {\n    \"candidate_name\": \"Alex Morgan\",\n    \"candidate_file_slug\": \"Alex_Morgan\",\n    \"candidate_headline\": \"Enterprise & MES System Integrator | AI & Workflow Automation (n8n, APIs, LLMs) | Linux & DevOps Tooling\",\n    \"candidate_location\": \"Debrecen, Hungary (Remote / Hybrid)\",\n    \"candidate_email\": \"alex.morgan@example.com\",\n    \"candidate_linkedin_url\": \"https://www.linkedin.com/in/alex-morgan-example\",\n    \"candidate_linkedin_display\": \"linkedin.com/in/alex-morgan-example\",\n    \"secondary_cv_language\": \"hu\",\n    \"secondary_cv_language_name\": \"Hungarian\",\n    \"gemini_scoring_model\": \"gemini-3.5-flash-lite\",\n    \"gemini_cv_model\": \"gemini-3.5-flash-lite\",\n    \"gotenberg_url\": \"http://gotenberg:3000\",\n    \"nas_output_dir\": \"/home/node/.n8n\",\n    \"score_threshold_apply\": 70,\n    \"score_threshold_maybe\": 50,\n    \"max_new_jobs_per_run\": 15,\n    \"linkedin_time_filter\": \"r604800\",\n    \"always_generate_cover_letter\": false,\n    \"primary_region_max_office_days\": 2,\n    \"secondary_city_max_office_days\": 1,\n    \"search_queries_json\": {\n        \"linkedin_keywords\": [\n            {\n                \"keyword\": \"AI Automation\",\n                \"location\": \"Hungary\",\n                \"track\": \"Tier 1: AI & Workflow Automation\"\n            },\n            {\n                \"keyword\": \"Automation Engineer\",\n                \"location\": \"Hungary\",\n                \"track\": \"Tier 1: AI & Workflow Automation\"\n            },\n            {\n                \"keyword\": \"Workflow Automation\",\n                \"location\": \"Hungary\",\n                \"track\": \"Tier 1: AI & Workflow Automation\"\n            },\n            {\n                \"keyword\": \"LLM\",\n                \"location\": \"Hungary\",\n                \"track\": \"Tier 1: AI & Workflow Automation\"\n            },\n            {\n                \"keyword\": \"n8n\",\n                \"location\": \"Hungary\",\n                \"track\": \"Tier 1: AI & Workflow Automation\"\n            },\n            {\n                \"keyword\": \"GenAI\",\n                \"location\": \"Hungary\",\n                \"track\": \"Tier 1: AI & Workflow Automation\"\n            },\n            {\n                \"keyword\": \"System Integrator\",\n                \"location\": \"Hungary\",\n                \"track\": \"Tier 1: Enterprise / MES & API Integration\"\n            },\n            {\n                \"keyword\": \"Integration Engineer\",\n                \"location\": \"Hungary\",\n                \"track\": \"Tier 1: Enterprise / MES & API Integration\"\n            },\n            {\n                \"keyword\": \"MES Engineer\",\n                \"location\": \"Hungary\",\n                \"track\": \"Tier 1: Enterprise / MES & API Integration\"\n            },\n            {\n                \"keyword\": \"Application Engineer\",\n                \"location\": \"Hungary\",\n                \"track\": \"Tier 1: Enterprise / MES & API Integration\"\n            },\n            {\n                \"keyword\": \"API Integration\",\n                \"location\": \"Hungary\",\n                \"track\": \"Tier 1: Enterprise / MES & API Integration\"\n            },\n            {\n                \"keyword\": \"DevOps Engineer\",\n                \"location\": \"Hungary\",\n                \"track\": \"Tier 2: Observability, Linux & DevOps\"\n            },\n            {\n                \"keyword\": \"Linux Engineer\",\n                \"location\": \"Hungary\",\n                \"track\": \"Tier 2: Observability, Linux & DevOps\"\n            },\n            {\n                \"keyword\": \"Grafana\",\n                \"location\": \"Hungary\",\n                \"track\": \"Tier 2: Observability, Linux & DevOps\"\n            },\n            {\n                \"keyword\": \"Solutions Engineer\",\n                \"location\": \"Hungary\",\n                \"track\": \"Tier 2: Technical Solutions / Integration Consultant\"\n            },\n            {\n                \"keyword\": \"Solution Consultant\",\n                \"location\": \"Hungary\",\n                \"track\": \"Tier 2: Technical Solutions / Integration Consultant\"\n            },\n            {\n                \"keyword\": \"Automation\",\n                \"location\": \"Debrecen, Hajdú-Bihar, Hungary\",\n                \"track\": \"Debrecen 1hr Region\"\n            },\n            {\n                \"keyword\": \"Integration\",\n                \"location\": \"Debrecen, Hajdú-Bihar, Hungary\",\n                \"track\": \"Debrecen 1hr Region\"\n            },\n            {\n                \"keyword\": \"DevOps\",\n                \"location\": \"Debrecen, Hajdú-Bihar, Hungary\",\n                \"track\": \"Debrecen 1hr Region\"\n            },\n            {\n                \"keyword\": \"Linux\",\n                \"location\": \"Debrecen, Hajdú-Bihar, Hungary\",\n                \"track\": \"Debrecen 1hr Region\"\n            },\n            {\n                \"keyword\": \"IT Engineer\",\n                \"location\": \"Nyíregyháza, Szabolcs-Szatmár-Bereg, Hungary\",\n                \"track\": \"Debrecen 1hr Region\"\n            },\n            {\n                \"keyword\": \"IT Engineer\",\n                \"location\": \"Miskolc, Borsod-Abaúj-Zemplén, Hungary\",\n                \"track\": \"Debrecen 1hr Region\"\n            },\n            {\n                \"keyword\": \"IT Engineer\",\n                \"location\": \"Tiszaújváros, Borsod-Abaúj-Zemplén, Hungary\",\n                \"track\": \"Debrecen 1hr Region\"\n            }\n        ],\n        \"nofluffjobs_queries\": [\n            {\n                \"rawSearch\": \"city=budapest city=debrecen city=miskolc city=nyiregyhaza\",\n                \"track\": \"Hungary Priority Cities & Region\"\n            },\n            {\n                \"rawSearch\": \"city=remote jobLanguage=en AI\",\n                \"track\": \"Tier 1: AI & Workflow Automation\"\n            },\n            {\n                \"rawSearch\": \"city=remote jobLanguage=en automation\",\n                \"track\": \"Tier 1: AI & Workflow Automation\"\n            },\n            {\n                \"rawSearch\": \"city=remote jobLanguage=en workflow\",\n                \"track\": \"Tier 1: AI & Workflow Automation\"\n            },\n            {\n                \"rawSearch\": \"city=remote jobLanguage=en integration\",\n                \"track\": \"Tier 1: Enterprise / MES & API Integration\"\n            },\n            {\n                \"rawSearch\": \"city=remote jobLanguage=en n8n\",\n                \"track\": \"Tier 1: AI & Workflow Automation\"\n            },\n            {\n                \"rawSearch\": \"city=remote jobLanguage=en DevOps\",\n                \"track\": \"Tier 2: Observability, Linux & DevOps\"\n            },\n            {\n                \"rawSearch\": \"city=remote jobLanguage=en linux\",\n                \"track\": \"Tier 2: Observability, Linux & DevOps\"\n            },\n            {\n                \"rawSearch\": \"city=remote jobLanguage=en solutions\",\n                \"track\": \"Tier 2: Technical Solutions / Integration Consultant\"\n            }\n        ]\n    },\n    \"candidate_profile\": \"# Alex Morgan — Example Master Candidate Profile\\n\\n- **Full Name:** Alex Morgan\\n- **Current Title / Headline:** Enterprise & MES System Integrator | AI & Workflow Automation (n8n, APIs, LLMs) | Linux & DevOps Tooling\\n- **Career Identity & Background Clarification:** Example candidate with 4.5+ years of real-world experience in **Enterprise & MES System Integration, Linux System Administration, DevOps & Observability (Grafana), UAT/Release Coordination, and AI/Workflow Automation (`n8n`, REST APIs, SQL, Python/Bash scripting)** — **NOT** commercial software application development. Strongest at practical system integration, automation, and operational engineering rather than building commercial software products or backend microservices from scratch.\\n- **Location:** Debrecen, Hajdú-Bihar, Hungary\\n- **Email:** alex.morgan@example.com\\n- **LinkedIn:** https://www.linkedin.com/in/alex-morgan-example\\n- **Work Mode & Location Rules:**\\n  - **Fully Remote** (Hungary / EU / Global): Accepted\\n  - **Debrecen + 1-hour driving radius** (Debrecen, Nyíregyháza, Tiszaújváros, Miskolc, Polgár, Hajdúszoboszló, Hajdúböszörmény, Balmazújváros, Berettyóújfalu, Nyírbátor, Püspökladány, Karcag): Hybrid with **max 2 office days/week (minimum 3 days/week Home Office)**\\n  - **Budapest area:** Hybrid with **max 1 office day/week (minimum 4 days/week Home Office)**\\n  - **Explicit Office / Location Violations -> Drop Listing (`SKIPPED`):** Any listing outside approved zones without Remote, explicitly Onsite-only, or explicitly requiring `> 1` office day/week in Budapest / `> 2` office days/week in the Debrecen 1-hour region is automatically dropped (`SKIPPED`, no Discord alert).\\n  - **Unspecified Office / HO Schedule -> Keep with Warning:** Any Hybrid or unspecified-mode role in Budapest or the Debrecen 1-hour region without explicit office/HO day counts remains eligible with a **-5 pt penalty** and a prominent warning banner (`⚠️ WARNING: Office/HO days unspecified...`).\\n- **Target Role Tiers:**\\n  - **Tier 1 (Top Priority):** AI & Workflow Automation Engineer / Specialist (`n8n`, LLM workflows, API integrations, process automation); Enterprise / MES Systems & API Integration Engineer (System Integrator, Application Engineer, Solution Consultant)\\n  - **Tier 2 (Secondary Priority):** Observability, Linux & DevOps Automation Engineer (Grafana, Linux, Docker, CI/CD — without 24/7 on-call or deep cloud/K8s architect specialization); Technical Solutions / Integration Consultant (prototyping & integrating AI/automation/enterprise workflows)\\n- **Job Security & Compensation Preferences:**\\n  - Strongly prefer **AI-proof**, hands-on integration & automation ownership roles at stable product or enterprise companies\\n  - **Permanent full-time employment (indefinite contract)** strongly preferred; avoid B2B/contractor-only or body-leasing agency roles\\n  - **Target Compensation:** **1.2M – 1.8M+ HUF/month gross** (~3,000 – 4,500+ EUR/month); penalize salaries disclosed below 1.1M HUF/month gross\\n- **Target Seniority:** Medior / Mid-level to Senior in **System Integration, AI/Workflow Automation, Linux/DevOps Tooling, and Application/MES Engineering** (4.5+ years enterprise IT experience — NOT Medior/Senior commercial Software Development)\\n- **Dealbreakers & Exclusions:**\\n  - No Medior/Senior Software Developer / Backend Software Engineer roles requiring 2–3+ years of commercial application software development (even in Python), OOP architecture, or full-time software product coding\\n  - No shady, volatile, or controversial industries/companies: crypto/Web3/NFTs/token exchanges, gambling/betting/iGaming/casinos, adult entertainment, high-risk forex/binary options/CFDs, MLM/shady affiliate marketing, or unstable stealth startups\\n  - No pure non-building coordinator/process roles (Incident/Change/Release Manager, Scrum Master, manual UAT tester)\\n  - No 24/7 shift work, heavy on-call firefighting, or L1/L2 helpdesk/sysadmin ticket grinding\\n  - No roles requiring 4+ years of Senior Java, C#/.NET, C++, or Frontend React/Angular\\n  - No pure Cloud/Kubernetes architect roles requiring deep AWS/Azure/GCP/Terraform specialization from day one\\n  - No short-term contractor / agency body-leasing roles\\n\\n---\\n\\n## Executive Summary\\nResults-driven **DevOps & Enterprise/MES System Integrator** with prior enterprise experience as a **Linux System Administrator** (4.5+ years total experience). Combines practical expertise in enterprise system integration, Linux infrastructure, observability (Grafana), and workflow automation (`n8n`, REST APIs, Python/Bash scripting) with operational experience in **Incident Management, Change/Release Coordination, and User Acceptance Testing (UAT)**. Passionate about **Applied AI, Large Language Models (LLMs), and intelligent workflow orchestration**.\\n\\n---\\n\\n## Core Competencies & Technical Skills\\n\\n### AI & Intelligent Automation\\n- **LLM & Generative AI:** Large Language Models (LLMs), Prompt Engineering, Structured Outputs, RAG & AI Agent workflows\\n- **Workflow & Process Automation:** n8n workflow orchestration, REST API integrations, webhook architectures, Python & Bash scripting, operational process automation\\n\\n### DevOps, Infrastructure & Observability\\n- **Operating Systems & Infrastructure:** Enterprise Linux System Administration (RHEL, Ubuntu, SLES), shell scripting (Bash), system hardening, patching, high-availability server operations\\n- **Observability & Monitoring:** Grafana dashboard design, alerting pipelines, log & metric analysis, proactive anomaly detection, SLA/SLO monitoring\\n- **Containers & Delivery:** Docker, CI/CD pipeline support, Git version control, configuration management\\n\\n### Enterprise System Integration & MES\\n- **Manufacturing Execution Systems (MES):** End-to-end MES software integration in high-availability production environments, interface troubleshooting\\n- **Quality & Validation:** User Acceptance Testing (UAT) planning and execution, test coordination between stakeholders and engineering teams, defect triage, go-live readiness\\n- **Data & Interfaces:** SQL queries & database troubleshooting, REST/SOAP APIs, message queues, JSON/XML payload analysis\\n\\n---\\n\\n## Professional Experience\\n\\n### Example Automotive Systems — IT / MES System Integrator\\n**September 2024 – Present** | *Debrecen, Hungary*\\n- **MES & Enterprise System Integration:** Integrated, configured, and maintained mission-critical Manufacturing Execution Systems (MES) and connected IT services supporting production workflows.\\n- **DevOps & Observability (Grafana):** Designed and maintained Grafana monitoring dashboards, alerts, and operational visibility tools to track system health and interface latency.\\n- **Change, Release & UAT Coordination:** Coordinated software rollouts, configuration changes, and UAT cycles across staging and production environments with minimal disruption.\\n- **Automation & AI Initiatives:** Automated repetitive operational and integration tasks using Python/Bash scripting, REST APIs, LLM workflows, and n8n.\\n\\n### Example Telecom Cloud Services — Linux System Administrator\\n**July 2022 – September 2024 (2 years 3 months)** | *Debrecen, Hungary*\\n- **Enterprise Linux Administration:** Administered, provisioned, and maintained enterprise Linux server environments ensuring high availability and security compliance.\\n- **Incident Resolution & L2/L3 Support:** Resolved OS, networking, storage, and service-level incidents within strict enterprise SLA targets.\\n- **Patching, Hardening & Operational Automation:** Executed scheduled maintenance windows and automated routine sysadmin checks, reporting, and log rotation using Bash and Linux tooling.\\n\\n---\\n\\n## Education\\n\\n### Example University of Technology\\n**BSc in Computer Science (2021 – 2025)**\\n\\n---\\n\\n## Languages\\n- **Hungarian:** Native\\n- **English:** Fluent / Professional Working Proficiency (B2+/C1)\\n\"\n}\n}];"
+      },
+      "id": "38d5ed50-dcf4-595f-8e34-a124405226e4",
+      "name": "Initialize Profile and Settings",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -340,
+        210
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "fileSelector": "={{ $json.nas_output_dir }}/seen_jobs.json",
+        "dataPropertyName": "data",
+        "options": {}
+      },
+      "id": "6adc607d-5498-55ce-8a52-44c74ecf95b4",
+      "name": "Load Seen Jobs File",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        -120,
+        210
+      ],
+      "continueOnFail": true,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const config = $('Initialize Profile and Settings').first().json;\nconst seenItems = $('Load Seen Jobs File').all();\n\n// Initialize staticData seenJobIds from disk file if available\nconst staticData = $getWorkflowStaticData('global');\nif (!staticData.seenJobIds || typeof staticData.seenJobIds !== 'object') {\n  staticData.seenJobIds = {};\n}\n\nfor (const item of seenItems) {\n  if (item.binary && item.binary.data) {\n    try {\n      const buf = await this.helpers.getBinaryDataBuffer(0, 'data');\n      const parsed = JSON.parse(buf.toString('utf8'));\n      if (parsed && typeof parsed === 'object') {\n        Object.assign(staticData.seenJobIds, parsed);\n      }\n    } catch (e) {\n      // Ignore missing or empty file on first run\n    }\n  }\n}\n\nlet searchCfg = {};\ntry {\n  searchCfg = typeof config.search_queries_json === 'string'\n    ? JSON.parse(config.search_queries_json)\n    : config.search_queries_json;\n} catch (e) {\n  searchCfg = { linkedin_keywords: [] };\n}\n\nconst timeFilter = config.linkedin_time_filter || 'r604800';\nconst queries = (searchCfg.linkedin_keywords || []).map((entry) => {\n  const kw = entry.keyword;\n  const loc = entry.location || 'Hungary';\n  const url = `https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=${encodeURIComponent(kw)}&location=${encodeURIComponent(loc)}&f_TPR=${encodeURIComponent(timeFilter)}&start=0`;\n  return {\n    json: {\n      source: 'linkedin',\n      keyword: kw,\n      search_location: loc,\n      default_track: entry.track || 'General',\n      search_url: url\n    }\n  };\n});\n\nreturn queries;"
+      },
+      "id": "2c885f6c-f821-506e-bd3e-0e288e9ef02f",
+      "name": "Build LinkedIn Queries",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        120,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.search_url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            },
+            {
+              "name": "Accept-Language",
+              "value": "en-US,en;q=0.9,hu;q=0.8"
+            }
+          ]
+        },
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 1200
+            }
+          },
+          "response": {
+            "response": {
+              "responseFormat": "text",
+              "outputPropertyName": "data"
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "id": "b26da662-bcce-5600-b775-17a294b8ff5b",
+      "name": "Fetch LinkedIn Search Cards",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        340,
+        80
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const allInputs = $input.all();\nconst queryItems = $('Build LinkedIn Queries').all();\nconst out = [];\n\nfunction cleanHtmlText(str) {\n  if (!str) return '';\n  return str\n    .replace(/<[^>]+>/g, ' ')\n    .replace(/&amp;/g, '&')\n    .replace(/&lt;/g, '<')\n    .replace(/&gt;/g, '>')\n    .replace(/&quot;/g, '\"')\n    .replace(/&#39;/g, \"'\")\n    .replace(/\\s+/g, ' ')\n    .trim();\n}\n\nfor (let idx = 0; idx < allInputs.length; idx++) {\n  const res = allInputs[idx].json || {};\n  const qMeta = (queryItems[idx] && queryItems[idx].json) ? queryItems[idx].json : {};\n  const html = typeof res.data === 'string' ? res.data : (typeof res.body === 'string' ? res.body : '');\n  if (!html || !html.includes('base-search-card')) continue;\n\n  const parts = html.split('<li');\n  for (const part of parts) {\n    if (!part.includes('jobPosting:')) continue;\n\n    const urnMatch = part.match(/data-entity-urn=\"urn:li:jobPosting:(\\d+)\"/);\n    if (!urnMatch) continue;\n    const rawId = urnMatch[1];\n\n    const titleMatch = part.match(/class=\"base-search-card__title\"[^>]*>([\\s\\S]*?)<\\/h3>/);\n    const subMatch = part.match(/class=\"base-search-card__subtitle\"[^>]*>([\\s\\S]*?)<\\/h4>/);\n    const locMatch = part.match(/class=\"job-search-card__location\"[^>]*>([\\s\\S]*?)<\\/span>/);\n    const linkMatch = part.match(/class=\"base-card__full-link[^\"]*\"[^>]*href=\"([^\"]+)\"/);\n    const dateMatch = part.match(/<time[^>]*datetime=\"([^\"]+)\"/);\n\n    const title = cleanHtmlText(titleMatch ? titleMatch[1] : '');\n    const company = cleanHtmlText(subMatch ? subMatch[1] : '');\n    const location = cleanHtmlText(locMatch ? locMatch[1] : 'Remote');\n    const rawUrl = linkMatch ? linkMatch[1].split('?')[0] : `https://www.linkedin.com/jobs/view/${rawId}`;\n    const postedDate = dateMatch ? dateMatch[1] : new Date().toISOString().slice(0, 10);\n\n    if (!title) continue;\n\n    out.push({\n      json: {\n        job_id: `li_${rawId}`,\n        raw_id: rawId,\n        source: 'LinkedIn',\n        title,\n        company: company || 'Unknown Company',\n        location,\n        url: rawUrl,\n        detail_url: `https://www.linkedin.com/jobs-guest/jobs/api/jobPosting/${rawId}`,\n        posted_date: postedDate,\n        matched_keyword: qMeta.keyword || '',\n        initial_track: qMeta.default_track || 'General',\n        salary_info: 'Not disclosed'\n      }\n    });\n  }\n}\n\nreturn out;"
+      },
+      "id": "96cb8519-02e4-59d0-aa40-cddd4bc71203",
+      "name": "Parse LinkedIn Cards",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        80
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const config = $('Initialize Profile and Settings').first().json;\nlet searchCfg = {};\ntry {\n  searchCfg = typeof config.search_queries_json === 'string'\n    ? JSON.parse(config.search_queries_json)\n    : config.search_queries_json;\n} catch (e) {\n  searchCfg = { nofluffjobs_queries: [] };\n}\n\nreturn (searchCfg.nofluffjobs_queries || []).map((q) => ({\n  json: {\n    source: 'nofluffjobs',\n    rawSearch: q.rawSearch,\n    default_track: q.track || 'General',\n    request_body: JSON.stringify({\n      rawSearch: q.rawSearch,\n      page: 1\n    })\n  }\n}));"
+      },
+      "id": "c8153827-6ecc-5c54-aa47-b6591bf2057d",
+      "name": "Build NoFluffJobs Queries",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        120,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://nofluffjobs.com/api/search/posting?pageTo=1&pageSize=20&salaryCurrency=HUF&salaryPeriod=month&region=hu&language=en-GB",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.request_body }}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 800
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "id": "21e89726-58b1-53e5-83cf-9c88dc816f05",
+      "name": "Fetch NoFluffJobs Search API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        340,
+        320
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const allInputs = $input.all();\nconst queryItems = $('Build NoFluffJobs Queries').all();\nconst out = [];\n\nfor (let idx = 0; idx < allInputs.length; idx++) {\n  const body = allInputs[idx].json || {};\n  const qMeta = (queryItems[idx] && queryItems[idx].json) ? queryItems[idx].json : {};\n  const postings = Array.isArray(body.postings) ? body.postings : [];\n\n  for (const p of postings) {\n    if (!p || !p.id || !p.title) continue;\n\n    const places = (p.location && Array.isArray(p.location.places)) ? p.location.places : [];\n    const cities = places.map((pl) => pl.city).filter(Boolean);\n    const countries = places.map((pl) => (pl.country && pl.country.code) ? pl.country.code : '').filter(Boolean);\n    const isRemote = Boolean(p.fullyRemote) || cities.some((c) => /remote/i.test(c));\n    const isHungary = (Array.isArray(p.regions) && p.regions.includes('hu')) ||\n      countries.includes('HUN') ||\n      cities.some((c) => /budapest|debrecen|nyíregyháza|nyiregyhaza|tiszaújváros|tiszaujvaros|miskolc|polgár|polgar|hajdúszoboszló|hajduszoboszlo|hajdúböszörmény|hajduboszormeny|balmazújváros|balmazujvaros|berettyóújfalu|berettyoujfalu|nyírbátor|nyirbator|püspökladány|puspokladany|karcag|szeged|győr|pécs|hungary/i.test(c));\n\n    // Must be either in target region (Hungary) or Remote\n    if (!isHungary && !isRemote) continue;\n\n    let salaryInfo = 'Not disclosed';\n    if (p.salary && p.salary.from) {\n      salaryInfo = `${p.salary.from} - ${p.salary.to || p.salary.from} ${p.salary.currency || 'HUF'} / ${p.salary.period || 'Month'} (${p.salary.type || 'gross'})`;\n    }\n\n    const locationStr = [\n      isRemote ? 'Remote' : '',\n      ...cities.filter((c) => !/remote/i.test(c)).slice(0, 3)\n    ].filter(Boolean).join(', ') || 'Remote / Europe';\n\n    const slug = p.url || p.id;\n    out.push({\n      json: {\n        job_id: `nfj_${p.id}`,\n        raw_id: p.id,\n        source: 'NoFluffJobs',\n        title: p.title.trim(),\n        company: (p.name || 'Unknown Company').trim(),\n        location: locationStr,\n        url: `https://nofluffjobs.com/hu/job/${slug}`,\n        detail_url: `https://nofluffjobs.com/api/posting/${encodeURIComponent(p.id)}`,\n        posted_date: p.posted ? new Date(p.posted).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10),\n        matched_keyword: qMeta.rawSearch || '',\n        initial_track: qMeta.default_track || 'General',\n        salary_info: salaryInfo,\n        seniority_list: Array.isArray(p.seniority) ? p.seniority.join(', ') : ''\n      }\n    });\n  }\n}\n\nreturn out;"
+      },
+      "id": "c20caa7a-e855-5eb5-b1e5-6dd64ccce86b",
+      "name": "Parse NoFluffJobs Postings",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        320
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "mode": "append"
+      },
+      "id": "5a853d5a-2660-510a-8674-08e6a141f977",
+      "name": "Merge Job Sources",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        760,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const config = $('Initialize Profile and Settings').first().json;\nconst staticData = $getWorkflowStaticData('global');\nconst seenMap = staticData.seenJobIds || {};\n\nconst allCandidates = $input.all().map((i) => i.json).filter((j) => j && j.job_id);\n\n// Relevant title keywords across Non-SWE Integration, AI/Workflow Automation & DevOps/Observability tracks\nconst positiveTitleRegex = /\\b(ai|artificial intelligence|agentic|llm|genai|generative|automation|n8n|rpa|workflow|api|integration|integrator|mes|manufacturing execution|devops|sre|site reliability|platform|linux|observability|monitoring|grafana|prometheus|solution engineer|solutions engineer|solution consultant|solutions consultant|solution architect|forward deployed|forward-deployed|internal tools|application engineer|it engineer|systems engineer|system engineer)\\b/i;\n\n// Exclude Medior/Senior SWE developer titles, non-building coordinator/process roles, support grinds, junior/intern, heavy unrelated stacks, and Polish-only titles\nconst negativeTitleRegex = /\\b(intern|internship|gyakornok|diákmunka|trainee|junior|pályakezdő|working student|accountant|könyvelő|recruiter|hr|sales representative|értékesítő|ertékesítő|senior software engineer|senior software developer|medior software developer|software developer|senior backend|backend developer|backend engineer|senior python developer|python developer|lead developer|lead software engineer|fullstack|full-stack|full stack|incident manager|major incident|change manager|release manager|problem manager|scrum master|agile coach|project manager|manual tester|manual qa|l1 support|l2 support|helpdesk|service desk|servicedesk|frontend|front-end|react|angular|vue|ios|android|flutter|php developer|java developer|abap|starszy|specjalista|analityk|kierownik|programista|inżynier|młodszy)\\b|(?:^|[\\s\\/(,|])(?:\\.net|c#|c\\+\\+|\\(m\\/k\\)|\\(k\\/m\\))(?=$|[\\s\\/),|])/i;\n\n// Exclude shady, volatile, or controversial industries (crypto, gambling/iGaming, adult, forex/CFDs, MLM)\nconst excludedIndustryRegex = /\\b(crypto|cryptocurrency|blockchain|web3|nft|defi|tokenomics|binance|coinbase|bybit|kraken|casino|gambling|igaming|i-gaming|sportsbook|betting|bet365|unibet|poker|slots|slot machine|roulette|lottery|adult entertainment|nsfw|onlyfans|forex|binary options|cfd trading|mlm|multi-level marketing|szerencsejáték|kaszinó|sportfogadás|kripto)\\b/i;\n\nconst uniqueById = new Map();\nconst uniqueByCompanyTitle = new Set();\n\nfor (const job of allCandidates) {\n  if (seenMap[job.job_id]) continue;\n  if (uniqueById.has(job.job_id)) continue;\n\n  const normKey = `${(job.company || '').toLowerCase().trim()}::${(job.title || '').toLowerCase().trim()}`;\n  if (uniqueByCompanyTitle.has(normKey)) continue;\n\n  if (excludedIndustryRegex.test(`${job.title || ''} ${job.company || ''}`)) continue;\n  if (negativeTitleRegex.test(job.title)) continue;\n  if (!positiveTitleRegex.test(job.title)) continue;\n\n  uniqueById.set(job.job_id, job);\n  uniqueByCompanyTitle.add(normKey);\n}\n\nconst maxJobs = Number(config.max_new_jobs_per_run) || 15;\nconst filtered = Array.from(uniqueById.values()).slice(0, maxJobs);\n\nif (filtered.length === 0) {\n  return [{ json: { job_id: '', no_new_jobs: true } }];\n}\n\nreturn filtered.map((j) => ({ json: j }));"
+      },
+      "id": "a40039dd-0825-5397-8038-4051a9a07202",
+      "name": "Combine and Deduplicate Candidates",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-has-job-id",
+              "leftValue": "={{ $json.job_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ba85e236-b17c-5a94-af25-8178cb51cf06",
+      "name": "Any New Jobs",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1160,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "225770f4-b55e-55c7-b41e-b9625f4c36e7",
+      "name": "Loop Over Candidate Jobs",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1380,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.detail_url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json, text/html, */*"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text",
+              "outputPropertyName": "data"
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "id": "1222f8ed-7c2a-5228-9490-ce02df1e791c",
+      "name": "Fetch Full Job Details",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1600,
+        200
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const config = $('Initialize Profile and Settings').first().json;\nconst job = $('Loop Over Candidate Jobs').first().json;\nconst detailResp = $input.first().json || {};\n\nconst candidateName = config.candidate_name || 'the candidate';\nconst primaryMaxOffice = Number(config.primary_region_max_office_days ?? 2);\nconst primaryMinHo = Math.max(0, 5 - primaryMaxOffice);\nconst secondaryMaxOffice = Number(config.secondary_city_max_office_days ?? 1);\nconst secondaryMinHo = Math.max(0, 5 - secondaryMaxOffice);\n\nfunction stripHtml(html) {\n  if (!html) return '';\n  return html\n    .replace(/<br\\s*\\/?>/gi, '\\n')\n    .replace(/<\\/p>/gi, '\\n\\n')\n    .replace(/<\\/li>/gi, '\\n')\n    .replace(/<li[^>]*>/gi, '• ')\n    .replace(/<[^>]+>/g, ' ')\n    .replace(/&amp;/g, '&')\n    .replace(/&lt;/g, '<')\n    .replace(/&gt;/g, '>')\n    .replace(/&quot;/g, '\"')\n    .replace(/&#39;/g, \"'\")\n    .replace(/&nbsp;/g, ' ')\n    .replace(/[ \\t]+/g, ' ')\n    .replace(/\\n{3,}/g, '\\n\\n')\n    .trim();\n}\n\nlet descriptionText = '';\nlet criteriaText = '';\nlet mustHaveSkills = '';\nlet niceToHaveSkills = '';\n\nconst rawPayload = typeof detailResp.data === 'string'\n  ? detailResp.data\n  : (typeof detailResp.body === 'string' ? detailResp.body : JSON.stringify(detailResp));\n\nif (job.source === 'LinkedIn') {\n  const descMatch = rawPayload.match(/show-more-less-html__markup[^>]*>([\\s\\S]*?)<\\/div>/i);\n  descriptionText = stripHtml(descMatch ? descMatch[1] : rawPayload.slice(0, 12000));\n\n  const critMatches = [...rawPayload.matchAll(/description__job-criteria-subheader[^>]*>([\\s\\S]*?)<\\/h3>[\\s\\S]*?description__job-criteria-text[^>]*>([\\s\\S]*?)<\\/span>/gi)];\n  criteriaText = critMatches.map((m) => `${stripHtml(m[1])}: ${stripHtml(m[2])}`).join(' | ');\n} else {\n  // NoFluffJobs JSON\n  let parsed = detailResp;\n  if (typeof rawPayload === 'string' && rawPayload.trim().startsWith('{')) {\n    try { parsed = JSON.parse(rawPayload); } catch (e) {}\n  }\n  const desc = (parsed.details && parsed.details.description) ? stripHtml(parsed.details.description) : '';\n  const musts = (parsed.requirements && Array.isArray(parsed.requirements.musts))\n    ? parsed.requirements.musts.map((m) => m.value).filter(Boolean).join(', ')\n    : '';\n  const nices = (parsed.requirements && Array.isArray(parsed.requirements.nices))\n    ? parsed.requirements.nices.map((n) => n.value).filter(Boolean).join(', ')\n    : '';\n  const reqDesc = (parsed.requirements && parsed.requirements.description) ? stripHtml(parsed.requirements.description) : '';\n  const dailyTasks = (parsed.specs && Array.isArray(parsed.specs.dailyTasks))\n    ? parsed.specs.dailyTasks.map((t) => stripHtml(t)).join('\\n• ')\n    : '';\n  mustHaveSkills = musts;\n  niceToHaveSkills = nices;\n  descriptionText = [\n    desc,\n    musts ? `Must-have skills: ${musts}` : '',\n    nices ? `Nice-to-have skills: ${nices}` : '',\n    reqDesc ? `Requirements details: ${reqDesc}` : '',\n    dailyTasks ? `Daily tasks:\\n• ${dailyTasks}` : ''\n  ].filter(Boolean).join('\\n\\n');\n}\n\nif (!descriptionText || descriptionText.length < 30) {\n  descriptionText = `Job Title: ${job.title} at ${job.company} (${job.location}). Track: ${job.initial_track}.`;\n}\n\n// Truncate description to keep token usage lean\ndescriptionText = descriptionText.slice(0, 9000);\n\nconst systemPrompt = `You are an expert technical career advisor and strict job-matching evaluator for ${candidateName}.\nEvaluate the job posting strictly against ${candidateName}'s Master Profile (System Integration, AI/Workflow Automation, Linux/DevOps Tooling — NOT commercial software application development), AI-proof job security rules, contract/compensation rules, and strict location/Home Office boundaries.\n\nCANDIDATE MASTER PROFILE:\n${config.candidate_profile}\n\n4-PART 100-POINT SCORING RUBRIC:\n1. role_fit_score (0-35 pts):\n   - 30-35 pts (Tier 1 Top Priority):\n     * AI & Workflow Automation Engineer / Specialist (n8n, LLM workflows, RAG/agents, API integrations, process automation)\n     * Enterprise / MES Systems & API Integration Engineer (System Integrator, Application Engineer, Solution Consultant connecting enterprise/industrial systems via REST APIs, SQL, webhooks, MES/ERP, and Python/Bash scripting)\n   - 22-29 pts (Tier 2 Secondary Priority):\n     * Observability, Linux & DevOps Automation Engineer (Grafana dashboards, Linux automation, Docker, CI/CD tooling — WITHOUT 24/7 on-call firefighting or day-one K8s/Cloud architect mandates)\n     * Technical Solutions / Integration Consultant (prototyping & integrating AI/automation/enterprise workflows with stakeholders)\n   - 0-12 pts (Mismatch / Dealbreaker):\n     * Commercial Software Development / Application Engineering roles (Medior/Senior Software Developer, Backend Software Engineer requiring 2-3+ years commercial application coding, OOP software architecture, or full-time product coding — even in Python -> set requires_commercial_swe_experience=true)\n     * Non-building coordinator/process roles (Incident Manager, Change Manager, Release Manager, Scrum Master, manual UAT/QA tester)\n     * 24/7 shift work, heavy on-call firefighting, or L1/L2 helpdesk/ticket grinding\n\n2. tech_stack_score (0-30 pts):\n   - 24-30 pts: Strong practical overlap with n8n/workflow orchestration, REST APIs/webhooks, LLM workflows/RAG, SQL, Linux, Docker, Grafana, MES/enterprise integration, and Python/Bash scripting.\n   - 14-23 pts: Partial overlap with reasonable ramp-up.\n   - 0-12 pts (Dealbreaker):\n     * If requiring 2-3+ years of commercial Software Development / Backend Application Engineering / OOP product coding (even in Python): set requires_commercial_swe_experience=true and cap tech_stack_score at 12.\n     * If requiring 4+ years of Senior Java, C#/.NET, C++, React/Angular frontend, OR deep Cloud/Kubernetes/AWS/Azure/GCP/Terraform architect specialization from day one: set requires_heavy_unrelated_stack=true.\n\n3. job_security_score (0-20 pts):\n   - Evaluate BOTH AI-proof job security (system/integration ownership, cross-system operational context, AI/automation architecture vs. easily automated L1 support/manual testing/boilerplate coding) AND employment stability / company trustworthiness.\n   - 16-20 pts: Permanent full-time employment (indefinite contract) at a stable product or enterprise company, high AI resilience & real integration/automation ownership.\n   - 9-15 pts: Permanent role with moderate AI resilience, or unclear contract type at a reputable product/enterprise firm.\n   - 0-8 pts (Dealbreaker - set is_b2b_or_agency_only=true if B2B/contractor-only/body-leasing agency): Short-term contractor, B2B-only, body-leasing agency, or high-churn shift/ticket role.\n   - 0 pts (Hard Exclude - set is_shady_or_excluded_industry=true): Shady, volatile, or controversial industries/companies: crypto/Web3/NFTs/token exchanges, gambling/betting/iGaming/casinos, adult entertainment, high-risk forex/binary options/CFDs, MLM/shady affiliate marketing, or unstable stealth startups.\n\n4. location_and_comp_score (0-15 pts):\n   - Location/HO sub-score (0-10 pts):\n     * 10 pts: Fully Remote (Hungary / EU / Global allowed without relocation).\n     * 8-9 pts: Debrecen + 1-hour driving radius (Debrecen, Nyíregyháza, Tiszaújváros, Miskolc, Polgár, Hajdúszoboszló, Hajdúböszörmény, Balmazújváros, Berettyóújfalu, Nyírbátor, Püspökladány, Karcag) explicitly allowing MAX ${primaryMaxOffice} office days/week (MIN ${primaryMinHo} days Home Office); OR Budapest explicitly allowing MAX ${secondaryMaxOffice} office day(s)/week (MIN ${secondaryMinHo} days Home Office).\n     * 5-6 pts (set is_unverified_hybrid=true, location_rule_passed=true): Budapest or Debrecen + 1hr region listing with Hybrid or Unknown work mode that does NOT specify exact office/HO day counts (do NOT set location_rule_passed=false when office/HO days are merely unspecified).\n     * 0 pts (set location_rule_passed=false): Set ONLY when explicitly Onsite-only, OR explicitly exceeds max office days (more than ${secondaryMaxOffice} day/wk in Budapest, more than ${primaryMaxOffice} days/wk in Debrecen + 1hr area), OR located outside approved zones (e.g., Győr/Germany/Poland/Remote US-only) without Hungary Remote.\n   - Compensation sub-score (0-5 pts):\n     * Compare against the Target Compensation range in the Candidate Master Profile.\n     * 5 pts: Meets or exceeds target salary range.\n     * 3-4 pts: Slightly below midpoint OR not disclosed at an enterprise/product firm matching target seniority.\n     * 0-1 pts: Disclosed significantly below minimum acceptable target compensation.\n\nADDITIONAL RULES:\n- IMPORTANT CANDIDATE REALITY CHECK: Respect the Career Identity & Exclusions in ${candidateName}'s Master Profile strictly. Never assume commercial software application development experience if the Master Profile explicitly excludes it: whenever a job expects 2-3+ years of commercial software development / application engineering (even in Python), set requires_commercial_swe_experience=true, role_fit_score at most 12, and tech_stack_score at most 12.\n- Reject Intern / Junior / Trainee roles (set role_fit_score at most 10).\n- Set is_shady_or_excluded_industry=true (and job_security_score=0) if the employer or role involves crypto/Web3/blockchain/NFTs, gambling/betting/iGaming/casinos, adult content, high-risk forex/CFDs, MLM/shady affiliate marketing, or an unstable/shady business.\n- Set is_non_building_or_support_grind=true if it is a pure coordinator/process role (Incident/Change/Release Manager, Scrum Master, manual QA) or 24/7 shift/on-call/L1-L2 ticket support grind.\n- Set requires_cover_letter=true ONLY if the posting explicitly requests a cover letter, motivational letter, or \"motivációs levél\".\n- match_score MUST equal role_fit_score + tech_stack_score + job_security_score + location_and_comp_score.`;\n\nconst userPrompt = `Evaluate this job listing and return JSON matching the schema:\n\nSource: ${job.source}\nJob ID: ${job.job_id}\nTitle: ${job.title}\nCompany: ${job.company}\nListed Location: ${job.location}\nSalary Info: ${job.salary_info || 'Not disclosed'}\nExtra Criteria: ${criteriaText || job.seniority_list || 'N/A'}\n\nFull Job Description:\n${descriptionText}`;\n\nconst geminiRequestBody = {\n  systemInstruction: {\n    parts: [{ text: systemPrompt }]\n  },\n  contents: [\n    {\n      role: 'user',\n      parts: [{ text: userPrompt }]\n    }\n  ],\n  generationConfig: {\n    temperature: 0.15,\n    responseMimeType: 'application/json',\n    responseSchema: {\n      type: 'OBJECT',\n      required: [\n        'role_fit_score',\n        'tech_stack_score',\n        'job_security_score',\n        'location_and_comp_score',\n        'match_score',\n        'matched_track',\n        'location_zone',\n        'work_mode',\n        'office_days_per_week',\n        'home_office_days_per_week',\n        'location_rule_passed',\n        'is_unverified_hybrid',\n        'location_notes',\n        'requires_commercial_swe_experience',\n        'is_shady_or_excluded_industry',\n        'is_non_building_or_support_grind',\n        'requires_heavy_unrelated_stack',\n        'is_b2b_or_agency_only',\n        'contract_type',\n        'requires_cover_letter',\n        'posting_language',\n        'ai_proof_assessment',\n        'fit_summary',\n        'key_matching_skills',\n        'missing_or_stretch_skills'\n      ],\n      properties: {\n        role_fit_score: { type: 'INTEGER', description: '0-35 points for AI/Workflow Automation or System Integration fit' },\n        tech_stack_score: { type: 'INTEGER', description: '0-30 points for n8n/APIs/LLM/SQL/Linux/Docker/Grafana/MES/scripting overlap' },\n        job_security_score: { type: 'INTEGER', description: '0-20 points for AI resilience, system ownership, and permanent contract stability' },\n        location_and_comp_score: { type: 'INTEGER', description: '0-15 points (0-10 location/HO fit + 0-5 compensation fit)' },\n        match_score: { type: 'INTEGER', description: 'Sum of the 4 sub-scores from 0 to 100' },\n        matched_track: {\n          type: 'STRING',\n          enum: [\n            'Tier 1: AI & Workflow Automation',\n            'Tier 1: Enterprise / MES & API Integration',\n            'Tier 2: Observability, Linux & DevOps',\n            'Tier 2: Technical Solutions / Integration Consultant',\n            'Other / Mismatch'\n          ]\n        },\n        location_zone: {\n          type: 'STRING',\n          enum: ['REMOTE', 'DEBRECEN_1HR_AREA', 'BUDAPEST', 'OUTSIDE_ZONES']\n        },\n        work_mode: {\n          type: 'STRING',\n          enum: ['Remote', 'Hybrid', 'Onsite', 'Unknown']\n        },\n        office_days_per_week: {\n          type: 'INTEGER',\n          description: 'Required onsite office days per week (0-5), or -1 if unspecified'\n        },\n        home_office_days_per_week: {\n          type: 'INTEGER',\n          description: 'Home office days per week (0-5), or -1 if unspecified'\n        },\n        location_rule_passed: {\n          type: 'BOOLEAN',\n          description: `False ONLY if outside approved zones without Remote, explicitly Onsite-only, more than ${secondaryMaxOffice} office day/wk in Budapest, or more than ${primaryMaxOffice} office days/wk in Debrecen 1hr region. Keep True when Hybrid/Unknown in Budapest or Debrecen 1hr region omits day counts.`\n        },\n        is_unverified_hybrid: {\n          type: 'BOOLEAN',\n          description: 'True if in Budapest or Debrecen 1hr region with Hybrid/Unknown work mode and unspecified office/HO day counts'\n        },\n        location_notes: {\n          type: 'STRING',\n          description: 'Short note on location and home office policy'\n        },\n        requires_commercial_swe_experience: {\n          type: 'BOOLEAN',\n          description: 'True if the role requires 2-3+ years of commercial software development, backend microservice/application coding, or Medior/Senior SWE skills (even in Python)'\n        },\n        is_shady_or_excluded_industry: {\n          type: 'BOOLEAN',\n          description: 'True if crypto/Web3/NFTs, gambling/betting/iGaming/casinos, adult, shady forex/CFDs/MLM, or unstable/shady business'\n        },\n        is_non_building_or_support_grind: {\n          type: 'BOOLEAN',\n          description: 'True if pure process/coordinator (Incident/Change/Scrum/Manual QA) or 24/7 on-call/L1-L2 support grind'\n        },\n        requires_heavy_unrelated_stack: {\n          type: 'BOOLEAN',\n          description: 'True if requiring 4+ yrs Java/C#/.NET/C++/React/Angular or deep day-one Cloud/K8s/Terraform architect expertise'\n        },\n        is_b2b_or_agency_only: {\n          type: 'BOOLEAN',\n          description: 'True if B2B/contractor-only or body-leasing outsourcing agency'\n        },\n        contract_type: {\n          type: 'STRING',\n          enum: ['Permanent', 'B2B / Contractor', 'Fixed-Term', 'Unknown']\n        },\n        requires_cover_letter: {\n          type: 'BOOLEAN',\n          description: 'True ONLY if the posting explicitly requests a cover letter / motivational letter'\n        },\n        posting_language: {\n          type: 'STRING',\n          enum: ['en', 'hu', 'de', 'pl', 'other']\n        },\n        ai_proof_assessment: {\n          type: 'STRING',\n          description: '1 concise sentence evaluating AI resilience, system ownership, and job security'\n        },\n        fit_summary: {\n          type: 'STRING',\n          description: '2-3 concise sentences explaining why this role matches or does not match the candidate'\n        },\n        key_matching_skills: {\n          type: 'ARRAY',\n          items: { type: 'STRING' }\n        },\n        missing_or_stretch_skills: {\n          type: 'ARRAY',\n          items: { type: 'STRING' }\n        }\n      }\n    }\n  }\n};\n\nreturn [{\n  json: {\n    ...job,\n    clean_description: descriptionText,\n    criteria_text: criteriaText,\n    must_have_skills: mustHaveSkills,\n    nice_to_have_skills: niceToHaveSkills,\n    scoring_request_body: JSON.stringify(geminiRequestBody)\n  }\n}];"
+      },
+      "id": "0244c49d-f51b-541e-9a0d-fdfbabdb8c4b",
+      "name": "Extract Clean Job Description and Build Scoring Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1820,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "resume": "timeInterval",
+        "amount": 4,
+        "unit": "seconds"
+      },
+      "id": "5a3eb0ab-4fe0-5a6c-97bc-65f8d30ebc49",
+      "name": "Rate Limit Pause Scoring",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2040,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/{{ $('Initialize Profile and Settings').first().json.gemini_scoring_model }}:generateContent",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googlePalmApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.scoring_request_body }}",
+        "options": {
+          "timeout": 45000
+        }
+      },
+      "id": "bf1320de-de68-5fdd-9633-ec804218d865",
+      "name": "Gemini Score and Filter Job",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2240,
+        200
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "gemini-api-cred",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const config = $('Initialize Profile and Settings').first().json;\nconst jobData = $('Extract Clean Job Description and Build Scoring Prompt').first().json;\nconst geminiResp = $input.first().json || {};\n\nconst primaryMaxOffice = Number(config.primary_region_max_office_days ?? 2);\nconst primaryMinHo = Math.max(0, 5 - primaryMaxOffice);\nconst secondaryMaxOffice = Number(config.secondary_city_max_office_days ?? 1);\nconst secondaryMinHo = Math.max(0, 5 - secondaryMaxOffice);\n\nlet parsedScore = {\n  role_fit_score: 0,\n  tech_stack_score: 0,\n  job_security_score: 0,\n  location_and_comp_score: 0,\n  match_score: 0,\n  matched_track: jobData.initial_track || 'Other / Mismatch',\n  location_zone: 'OUTSIDE_ZONES',\n  work_mode: 'Unknown',\n  office_days_per_week: -1,\n  home_office_days_per_week: -1,\n  location_rule_passed: true,\n  is_unverified_hybrid: false,\n  location_notes: 'Not specified',\n  is_shady_or_excluded_industry: false,\n  requires_commercial_swe_experience: false,\n  is_non_building_or_support_grind: false,\n  requires_heavy_unrelated_stack: false,\n  is_b2b_or_agency_only: false,\n  contract_type: 'Unknown',\n  requires_cover_letter: false,\n  posting_language: 'en',\n  ai_proof_assessment: '',\n  fit_summary: 'Could not parse Gemini response.',\n  key_matching_skills: [],\n  missing_or_stretch_skills: []\n};\n\nfunction parseGeminiJson(text) {\n  let cleaned = String(text || '{}')\n    .trim()\n    .replace(/^```(?:json)?\\s*/i, '')\n    .replace(/\\s*```$/i, '')\n    .trim();\n  const firstBrace = cleaned.indexOf('{');\n  const lastBrace = cleaned.lastIndexOf('}');\n  if (firstBrace !== -1 && lastBrace > firstBrace) {\n    cleaned = cleaned.slice(firstBrace, lastBrace + 1);\n  }\n  try {\n    return JSON.parse(cleaned);\n  } catch (_) {\n    let repaired = '';\n    let inString = false;\n    let escaped = false;\n    for (let i = 0; i < cleaned.length; i++) {\n      const ch = cleaned[i];\n      if (inString) {\n        if (escaped) {\n          repaired += ch;\n          escaped = false;\n        } else if (ch === '\\\\') {\n          repaired += ch;\n          escaped = true;\n        } else if (ch === '\"') {\n          repaired += ch;\n          inString = false;\n        } else if (ch === '\\n') {\n          repaired += '\\\\n';\n        } else if (ch === '\\r') {\n          repaired += '\\\\r';\n        } else if (ch === '\\t') {\n          repaired += '\\\\t';\n        } else if (ch.charCodeAt(0) < 32) {\n          repaired += ' ';\n        } else {\n          repaired += ch;\n        }\n      } else {\n        if (ch === '\"') {\n          repaired += ch;\n          inString = true;\n        } else if (ch === ',') {\n          let j = i + 1;\n          while (j < cleaned.length && /\\s/.test(cleaned[j])) j++;\n          if (cleaned[j] === ']' || cleaned[j] === '}') {\n            continue;\n          }\n          repaired += ch;\n        } else {\n          repaired += ch;\n        }\n      }\n    }\n    return JSON.parse(repaired);\n  }\n}\n\nlet parseSucceeded = false;\ntry {\n  const parts = geminiResp?.candidates?.[0]?.content?.parts || [];\n  const answerPart = [...parts].reverse().find((p) => !p.thought && typeof p.text === 'string');\n  if (answerPart?.text && answerPart.text.trim()) {\n    parsedScore = { ...parsedScore, ...parseGeminiJson(answerPart.text) };\n    parseSucceeded = true;\n  }\n} catch (e) {\n  parsedScore.fit_summary = `JSON parse fallback: ${e.message}`;\n}\n\nconst roleFitScore = Math.max(0, Math.min(35, Math.round(Number(parsedScore.role_fit_score) || 0)));\nconst techStackScore = Math.max(0, Math.min(30, Math.round(Number(parsedScore.tech_stack_score) || 0)));\nconst jobSecurityScore = Math.max(0, Math.min(20, Math.round(Number(parsedScore.job_security_score) || 0)));\nconst locationCompScore = Math.max(0, Math.min(15, Math.round(Number(parsedScore.location_and_comp_score) || 0)));\n\nconst subSum = roleFitScore + techStackScore + jobSecurityScore + locationCompScore;\nconst rawScore = subSum > 0 ? subSum : Math.max(0, Math.min(100, Math.round(Number(parsedScore.match_score) || 0)));\n\nconst zone = String(parsedScore.location_zone || 'OUTSIDE_ZONES');\nconst workMode = String(parsedScore.work_mode || 'Unknown');\nconst rawOffice = parsedScore.office_days_per_week;\nconst rawHo = parsedScore.home_office_days_per_week;\nconst officeDays = (rawOffice !== null && rawOffice !== undefined && rawOffice !== '' && Number.isFinite(Number(rawOffice)) && Number(rawOffice) >= 0)\n  ? Math.max(0, Math.min(5, Math.round(Number(rawOffice))))\n  : -1;\nconst hoDays = (rawHo !== null && rawHo !== undefined && rawHo !== '' && Number.isFinite(Number(rawHo)) && Number(rawHo) >= 0)\n  ? Math.max(0, Math.min(5, Math.round(Number(rawHo))))\n  : -1;\n\nconst effectiveOfficeDays = officeDays >= 0 ? officeDays : (hoDays >= 0 ? Math.max(0, 5 - hoDays) : -1);\nconst effectiveHoDays = hoDays >= 0 ? hoDays : (officeDays >= 0 ? Math.max(0, 5 - officeDays) : -1);\n\nlet score = rawScore;\nlet locationRulePassed = parsedScore.location_rule_passed !== false;\nlet verificationBanner = '';\n\nif (!parseSucceeded) {\n  locationRulePassed = false;\n  score = 0;\n} else if (zone === 'REMOTE') {\n  locationRulePassed = parsedScore.location_rule_passed !== false;\n} else if (zone === 'DEBRECEN_1HR_AREA') {\n  if (workMode === 'Remote') {\n    locationRulePassed = true;\n  } else if (workMode === 'Onsite') {\n    locationRulePassed = false;\n  } else if (effectiveOfficeDays >= 0 && effectiveOfficeDays > primaryMaxOffice) {\n    locationRulePassed = false;\n  } else if (effectiveHoDays >= 0 && effectiveHoDays < primaryMinHo) {\n    locationRulePassed = false;\n  } else if ((workMode === 'Hybrid' || workMode === 'Unknown') && effectiveOfficeDays === -1 && effectiveHoDays === -1) {\n    locationRulePassed = true;\n    score -= 5;\n    verificationBanner = `⚠️ WARNING: Office/HO days unspecified — verify max ${primaryMaxOffice} office days/wk (min ${primaryMinHo} days HO) in Debrecen region`;\n  } else if (parsedScore.is_unverified_hybrid && locationRulePassed) {\n    score -= 5;\n    verificationBanner = `⚠️ WARNING: Office/HO days unspecified — verify max ${primaryMaxOffice} office days/wk (min ${primaryMinHo} days HO) in Debrecen region`;\n  }\n} else if (zone === 'BUDAPEST') {\n  if (workMode === 'Remote') {\n    locationRulePassed = true;\n  } else if (workMode === 'Onsite') {\n    locationRulePassed = false;\n  } else if (effectiveOfficeDays >= 0 && effectiveOfficeDays > secondaryMaxOffice) {\n    locationRulePassed = false;\n  } else if (effectiveHoDays >= 0 && effectiveHoDays < secondaryMinHo) {\n    locationRulePassed = false;\n  } else if ((workMode === 'Hybrid' || workMode === 'Unknown') && effectiveOfficeDays === -1 && effectiveHoDays === -1) {\n    locationRulePassed = true;\n    score -= 5;\n    verificationBanner = `⚠️ WARNING: Office/HO days unspecified — verify max ${secondaryMaxOffice} office day/wk (min ${secondaryMinHo} days HO) in Budapest`;\n  } else if (parsedScore.is_unverified_hybrid && locationRulePassed) {\n    score -= 5;\n    verificationBanner = `⚠️ WARNING: Office/HO days unspecified — verify max ${secondaryMaxOffice} office day/wk (min ${secondaryMinHo} days HO) in Budapest`;\n  }\n} else {\n  // OUTSIDE_ZONES\n  if (workMode !== 'Remote') {\n    locationRulePassed = false;\n  }\n}\n\n// Enforce deterministic dealbreaker hard caps & penalties\nif (parsedScore.is_b2b_or_agency_only) {\n  score = Math.min(score - 15, 60);\n}\nif (parsedScore.requires_heavy_unrelated_stack) {\n  score = Math.min(score, 45);\n}\nif (parsedScore.is_non_building_or_support_grind) {\n  score = Math.min(score, 40);\n}\n// Drop listing completely whenever location/HO criteria are explicitly not met\nif (!locationRulePassed) {\n  score = Math.min(score, 30);\n}\nif (parsedScore.is_shady_or_excluded_industry) {\n  score = Math.min(score, 20);\n}\nif (parsedScore.requires_commercial_swe_experience) {\n  score = Math.min(score, 45);\n}\n\nscore = Math.max(0, Math.min(100, Math.round(score)));\n\nconst applyThreshold = Number(config.score_threshold_apply) || 70;\nconst maybeThreshold = Number(config.score_threshold_maybe) || 50;\n\nlet matchTier = 'SKIPPED';\nif (!locationRulePassed || parsedScore.is_shady_or_excluded_industry || parsedScore.requires_commercial_swe_experience) {\n  matchTier = 'SKIPPED';\n} else if (score >= applyThreshold) {\n  matchTier = 'STRONG_MATCH';\n} else if (score >= maybeThreshold) {\n  matchTier = 'MAYBE_MATCH';\n}\n\nconst scoredAt = new Date().toISOString();\n\n// Update seenJobIds in staticData & prepare binary for seen_jobs.json\nconst staticData = $getWorkflowStaticData('global');\nif (!staticData.seenJobIds) staticData.seenJobIds = {};\nstaticData.seenJobIds[jobData.job_id] = {\n  title: jobData.title,\n  company: jobData.company,\n  source: jobData.source,\n  score,\n  tier: matchTier,\n  url: jobData.url,\n  scored_at: scoredAt\n};\n\nconst seenJsonStr = JSON.stringify(staticData.seenJobIds, null, 2);\nconst seenBinary = await this.helpers.prepareBinaryData(\n  Buffer.from(seenJsonStr, 'utf8'),\n  'seen_jobs.json',\n  'application/json'\n);\n\nreturn [{\n  json: {\n    job_id: jobData.job_id,\n    raw_id: jobData.raw_id,\n    source: jobData.source,\n    title: jobData.title,\n    company: jobData.company,\n    location: jobData.location,\n    url: jobData.url,\n    posted_date: jobData.posted_date,\n    salary_info: jobData.salary_info,\n    clean_description: jobData.clean_description,\n    role_fit_score: roleFitScore,\n    tech_stack_score: techStackScore,\n    job_security_score: jobSecurityScore,\n    location_and_comp_score: locationCompScore,\n    raw_score: rawScore,\n    match_score: score,\n    matched_track: parsedScore.matched_track,\n    location_zone: zone,\n    work_mode: workMode,\n    office_days_per_week: effectiveOfficeDays,\n    home_office_days_per_week: effectiveHoDays,\n    location_rule_passed: locationRulePassed,\n    is_unverified_hybrid: Boolean(parsedScore.is_unverified_hybrid || verificationBanner),\n    verification_banner: verificationBanner,\n    location_notes: parsedScore.location_notes,\n    is_shady_or_excluded_industry: Boolean(parsedScore.is_shady_or_excluded_industry),\n    requires_commercial_swe_experience: Boolean(parsedScore.requires_commercial_swe_experience),\n    is_non_building_or_support_grind: Boolean(parsedScore.is_non_building_or_support_grind),\n    requires_heavy_unrelated_stack: Boolean(parsedScore.requires_heavy_unrelated_stack),\n    is_b2b_or_agency_only: Boolean(parsedScore.is_b2b_or_agency_only),\n    contract_type: parsedScore.contract_type || 'Unknown',\n    requires_cover_letter: Boolean(parsedScore.requires_cover_letter),\n    posting_language: parsedScore.posting_language || 'en',\n    ai_proof_assessment: parsedScore.ai_proof_assessment || '',\n    fit_summary: parsedScore.fit_summary,\n    key_matching_skills: parsedScore.key_matching_skills || [],\n    missing_or_stretch_skills: parsedScore.missing_or_stretch_skills || [],\n    match_tier: matchTier,\n    scored_at: scoredAt\n  },\n  binary: {\n    seen_jobs_bin: seenBinary\n  }\n}];"
+      },
+      "id": "fb6b4d54-f757-5011-a3c2-17ce2155a700",
+      "name": "Parse Score and Update Seen Jobs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2460,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "={{ $('Initialize Profile and Settings').first().json.nas_output_dir }}/seen_jobs.json",
+        "dataPropertyName": "seen_jobs_bin",
+        "options": {}
+      },
+      "id": "e2d8d20a-982f-5439-a612-ab2eabe3b45e",
+      "name": "Save Updated Seen Jobs to Disk",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        2680,
+        400
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "",
+          "mode": "list",
+          "cachedResultName": "job_listings"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "job_id": "={{ $json.job_id }}",
+            "source": "={{ $json.source }}",
+            "title": "={{ $json.title }}",
+            "company": "={{ $json.company }}",
+            "location": "={{ $json.location }}",
+            "work_mode": "={{ $json.work_mode }}",
+            "match_score": "={{ $json.match_score }}",
+            "matched_track": "={{ $json.matched_track }}",
+            "match_tier": "={{ $json.match_tier }}",
+            "url": "={{ $json.url }}",
+            "scored_at": "={{ $json.scored_at }}"
+          }
+        }
+      },
+      "id": "7f236524-002a-5596-9d79-2d9efdfd29d7",
+      "name": "Log to n8n Data Table Optional",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        2680,
+        560
+      ],
+      "disabled": true,
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "id": "rule-strong",
+                    "leftValue": "={{ $json.match_tier }}",
+                    "rightValue": "STRONG_MATCH",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Strong Match 70 plus"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "id": "rule-maybe",
+                    "leftValue": "={{ $json.match_tier }}",
+                    "rightValue": "MAYBE_MATCH",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Maybe Match 50-69"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "id": "6190f550-e57e-58d5-8b4c-7f9e645c0259",
+      "name": "Route by Match Tier",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        3120,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const config = $('Initialize Profile and Settings').first().json;\nconst job = $('Parse Score and Update Seen Jobs').first().json;\n\nconst candidateName = config.candidate_name || 'the candidate';\nconst rawSec = String(config.secondary_cv_language || 'none').trim().toLowerCase();\nconst hasSecondary = Boolean(rawSec && rawSec !== 'none' && rawSec !== 'en');\nconst secLangName = config.secondary_cv_language_name || rawSec.toUpperCase();\nconst generateCoverLetter = Boolean(job.requires_cover_letter) || Boolean(config.always_generate_cover_letter);\n\nconst cvIntro = hasSecondary\n  ? `Your task is to generate a tailored, ATS-optimized CV in BOTH English (cv_en) and ${secLangName} (cv_secondary) for ${candidateName}, tailored specifically to the target job listing.`\n  : `Your task is to generate a tailored, ATS-optimized CV in English (cv_en) for ${candidateName}, tailored specifically to the target job listing.`;\n\nconst clIntro = generateCoverLetter\n  ? (hasSecondary\n      ? `Because this job listing requests a cover letter (or cover letter generation is forced), ALSO generate a tailored cover letter in BOTH English (cover_letter_en) and ${secLangName} (cover_letter_secondary).`\n      : 'Because this job listing requests a cover letter (or cover letter generation is forced), ALSO generate a tailored cover letter in English (cover_letter_en) and leave cover_letter_secondary empty \"\".')\n  : 'Do NOT generate a cover letter for this job (return empty strings \"\" for cover_letter_en and cover_letter_secondary).';\n\nconst secondarySchemaNote = hasSecondary\n  ? `\"cv_secondary\": {\n    \"target_headline\": \"string (${secLangName})\",\n    \"executive_summary\": \"string (3-4 sentences in ${secLangName})\",\n    \"skill_groups\": [{\"category\": \"string\", \"skills\": [\"string\"]}],\n    \"experience\": [{\"company\": \"string\", \"role\": \"string\", \"period\": \"string\", \"location\": \"string\", \"bullets\": [\"string\"]}],\n    \"education\": [{\"institution\": \"string\", \"degree\": \"string\", \"period\": \"string\", \"details\": \"string\"}],\n    \"certifications\": [\"string\"],\n    \"languages\": [\"string\"]\n  },\n  \"cover_letter_en\": \"string (empty string if not requested)\",\n  \"cover_letter_secondary\": \"string (empty string if not requested)\",`\n  : `\"cover_letter_en\": \"string (empty string if not requested)\",`;\n\nconst secondaryRuleLine = hasSecondary\n  ? `6. In ${secLangName} (cv_secondary), use natural, professional local IT terminology while keeping universal technical terms (Python, Bash, REST API, DevOps, Linux, Grafana, CI/CD, LLM, n8n, Docker, SQL, MES) in their standard industry form.`\n  : `6. Keep cv_en terminology crisp, quantified, and ATS-friendly (single-column layout ready).`;\n\nconst systemPrompt = `You are an elite executive technical CV & Cover Letter writer in Europe and internationally.\n${cvIntro}\n${clIntro}\n\nTAILORING & LIGHT INFERENCE RULES:\n1. Base all dates, employers, job titles, education, and certifications strictly on ${candidateName}'s Master Profile below. Never invent employers, degrees, or years of experience not present in the Master Profile.\n2. POSITIONING FOCUS & HONESTY CONSTRAINT: Frame ${candidateName} accurately based on their Master Profile — emphasizing real-world Enterprise & MES System Integration, AI/Workflow Automation (n8n, REST APIs, webhooks, LLM agents & RAG, SQL, Python/Bash scripting), and Linux/DevOps/Observability engineering rather than commercial software application development if excluded by the Master Profile. Include Change/Release/Incident coordination concisely as supporting enterprise reliability experience where helpful.\n3. LIGHT INFERENCE ALLOWED: Within their authentic non-SWE scope from the Master Profile, naturally emphasize and surface realistic tools, practices, and workflows implied by their real employers and roles that align with the target job's keywords for ATS matching.\n4. Reorder bullet points and skill groups so the skills most relevant to \"${job.title}\" at \"${job.company}\" (Track: ${job.matched_track}) appear first.\n5. Keep the content concise enough to fit cleanly on 1 to 2 pages in a single-column ATS layout (4-6 high-impact bullet points per recent primary role, 3-5 bullet points for earlier roles).\n${secondaryRuleLine}\n\nOUTPUT FORMAT:\nReturn ONLY valid JSON matching this exact structure (no markdown code fences, no extra keys):\n{\n  \"cv_en\": {\n    \"target_headline\": \"string\",\n    \"executive_summary\": \"string (3-4 sentences)\",\n    \"skill_groups\": [{\"category\": \"string\", \"skills\": [\"string\"]}],\n    \"experience\": [{\"company\": \"string\", \"role\": \"string\", \"period\": \"string\", \"location\": \"string\", \"bullets\": [\"string\"]}],\n    \"education\": [{\"institution\": \"string\", \"degree\": \"string\", \"period\": \"string\", \"details\": \"string\"}],\n    \"certifications\": [\"string\"],\n    \"languages\": [\"string\"]\n  },\n  ${secondarySchemaNote}\n  \"tailoring_notes\": [\"short bullet 1\", \"short bullet 2\", \"short bullet 3\"]\n}\n\nCANDIDATE MASTER PROFILE:\n${config.candidate_profile}`;\n\nconst userPrompt = `Generate the tailored CV JSON${hasSecondary ? ` in English and ${secLangName}` : ' in English'}${generateCoverLetter ? ' plus Cover Letter(s)' : ''} for this job:\n\nJob Title: ${job.title}\nCompany: ${job.company}\nLocation / Work Mode: ${job.location} (${job.work_mode})\nMatched Track: ${job.matched_track}\nMatch Score: ${job.match_score}/100\nKey Matching Skills to Highlight: ${(job.key_matching_skills || []).join(', ')}\nStretch Areas to Frame Positively: ${(job.missing_or_stretch_skills || []).join(', ')}\nGenerate Cover Letter: ${generateCoverLetter}\n\nJob Description:\n${(job.clean_description || '').slice(0, 4500)}`;\n\nconst cvObjectSchema = {\n  type: 'OBJECT',\n  required: [\n    'target_headline',\n    'executive_summary',\n    'skill_groups',\n    'experience',\n    'education',\n    'certifications',\n    'languages'\n  ],\n  properties: {\n    target_headline: { type: 'STRING' },\n    executive_summary: { type: 'STRING' },\n    skill_groups: {\n      type: 'ARRAY',\n      items: {\n        type: 'OBJECT',\n        required: ['category', 'skills'],\n        properties: {\n          category: { type: 'STRING' },\n          skills: { type: 'ARRAY', items: { type: 'STRING' } }\n        }\n      }\n    },\n    experience: {\n      type: 'ARRAY',\n      items: {\n        type: 'OBJECT',\n        required: ['company', 'role', 'period', 'location', 'bullets'],\n        properties: {\n          company: { type: 'STRING' },\n          role: { type: 'STRING' },\n          period: { type: 'STRING' },\n          location: { type: 'STRING' },\n          bullets: { type: 'ARRAY', items: { type: 'STRING' } }\n        }\n      }\n    },\n    education: {\n      type: 'ARRAY',\n      items: {\n        type: 'OBJECT',\n        required: ['institution', 'degree', 'period', 'details'],\n        properties: {\n          institution: { type: 'STRING' },\n          degree: { type: 'STRING' },\n          period: { type: 'STRING' },\n          details: { type: 'STRING' }\n        }\n      }\n    },\n    certifications: { type: 'ARRAY', items: { type: 'STRING' } },\n    languages: { type: 'ARRAY', items: { type: 'STRING' } }\n  }\n};\n\nconst responseProps = hasSecondary\n  ? {\n      cv_en: cvObjectSchema,\n      cv_secondary: cvObjectSchema,\n      cover_letter_en: { type: 'STRING' },\n      cover_letter_secondary: { type: 'STRING' },\n      tailoring_notes: { type: 'ARRAY', items: { type: 'STRING' } }\n    }\n  : {\n      cv_en: cvObjectSchema,\n      cover_letter_en: { type: 'STRING' },\n      tailoring_notes: { type: 'ARRAY', items: { type: 'STRING' } }\n    };\n\nconst requiredFields = hasSecondary\n  ? ['cv_en', 'cv_secondary', 'cover_letter_en', 'cover_letter_secondary', 'tailoring_notes']\n  : ['cv_en', 'cover_letter_en', 'tailoring_notes'];\n\nconst requestBody = {\n  systemInstruction: {\n    parts: [{ text: systemPrompt }]\n  },\n  contents: [\n    {\n      role: 'user',\n      parts: [{ text: userPrompt }]\n    }\n  ],\n  generationConfig: {\n    temperature: 0.2,\n    maxOutputTokens: 8192,\n    responseMimeType: 'application/json',\n    responseSchema: {\n      type: 'OBJECT',\n      required: requiredFields,\n      properties: responseProps\n    }\n  }\n};\n\nreturn [{\n  json: {\n    ...job,\n    generate_cover_letter: generateCoverLetter,\n    cv_request_body: JSON.stringify(requestBody)\n  }\n}];"
+      },
+      "id": "98c677ac-c996-56fe-ac50-c5ceb0f60fd0",
+      "name": "Build CV and Cover Letter Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3380,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "resume": "timeInterval",
+        "amount": 5,
+        "unit": "seconds"
+      },
+      "id": "9683d14b-605b-5596-9ec3-bacd13977900",
+      "name": "Rate Limit Pause CV Gen",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        3600,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/{{ $('Initialize Profile and Settings').first().json.gemini_cv_model }}:generateContent",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googlePalmApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.cv_request_body }}",
+        "options": {
+          "timeout": 240000
+        }
+      },
+      "id": "c3e12b3d-cc16-555c-86b5-e9199d014809",
+      "name": "Gemini Generate Tailored CV and CL",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3820,
+        40
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "gemini-api-cred",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 6000
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const config = $('Initialize Profile and Settings').first().json;\nconst job = $('Build CV and Cover Letter Prompt').first().json;\nconst geminiResp = $input.first().json || {};\n\nconst candidateName = config.candidate_name || 'Candidate';\nconst candidateHeadline = config.candidate_headline || 'System Integration & AI Automation Engineer';\nconst candidateLocation = config.candidate_location || 'Remote / Hybrid';\nconst candidateEmail = config.candidate_email || 'candidate@example.com';\nconst candidateLinkedinUrl = config.candidate_linkedin_url || 'https://www.linkedin.com';\nconst candidateLinkedinDisplay = config.candidate_linkedin_display || candidateLinkedinUrl;\nconst candidateSlug = config.candidate_file_slug || safeSlug(candidateName, 25) || 'Candidate';\n\nconst rawSec = String(config.secondary_cv_language || 'none').trim().toLowerCase();\nconst hasSecondary = Boolean(rawSec && rawSec !== 'none' && rawSec !== 'en');\nconst secCode = rawSec.toUpperCase();\n\nconst LABELS_BY_LANG = {\n  en: {\n    summary: 'Executive Summary',\n    skills: 'Core Competencies & Technical Skills',\n    experience: 'Professional Experience',\n    education: 'Education & Academic R&D',\n    certs: 'Certifications',\n    languages: 'Languages',\n    clTitle: 'Cover Letter'\n  },\n  hu: {\n    summary: 'Szakmai Összefoglaló',\n    skills: 'Kulcskompetenciák és Technológiák',\n    experience: 'Szakmai Tapasztalat',\n    education: 'Tanulmányok és Kutatás-Fejlesztés',\n    certs: 'Tanúsítványok',\n    languages: 'Nyelvtudás',\n    clTitle: 'Motivációs Levél'\n  },\n  de: {\n    summary: 'Berufliches Profil',\n    skills: 'Kernkompetenzen & Technologien',\n    experience: 'Berufserfahrung',\n    education: 'Ausbildung & Forschung',\n    certs: 'Zertifizierungen',\n    languages: 'Sprachen',\n    clTitle: 'Anschreiben'\n  },\n  pl: {\n    summary: 'Podsumowanie Zawodowe',\n    skills: 'Kluczowe Kompetencje i Technologie',\n    experience: 'Doświadczenie Zawodowe',\n    education: 'Wykształcenie i Badania',\n    certs: 'Certyfikaty',\n    languages: 'Języki',\n    clTitle: 'List Motywacyjny'\n  }\n};\n\nfunction esc(str) {\n  if (!str) return '';\n  return String(str)\n    .replace(/&/g, '&amp;')\n    .replace(/</g, '&lt;')\n    .replace(/>/g, '&gt;')\n    .replace(/\"/g, '&quot;');\n}\n\nfunction safeSlug(str, maxLen = 30) {\n  return String(str || 'Job')\n    .normalize('NFD')\n    .replace(/[\\u0300-\\u036f]/g, '')\n    .replace(/[^a-zA-Z0-9]+/g, '_')\n    .replace(/^_+|_+$/g, '')\n    .slice(0, maxLen) || 'Job';\n}\n\nfunction parseGeminiJson(text) {\n  let cleaned = String(text || '{}')\n    .trim()\n    .replace(/^```(?:json)?\\s*/i, '')\n    .replace(/\\s*```$/i, '')\n    .trim();\n  const firstBrace = cleaned.indexOf('{');\n  const lastBrace = cleaned.lastIndexOf('}');\n  if (firstBrace !== -1 && lastBrace > firstBrace) {\n    cleaned = cleaned.slice(firstBrace, lastBrace + 1);\n  }\n  try {\n    return JSON.parse(cleaned);\n  } catch (_) {\n    let repaired = '';\n    let inString = false;\n    let escaped = false;\n    for (let i = 0; i < cleaned.length; i++) {\n      const ch = cleaned[i];\n      if (inString) {\n        if (escaped) {\n          repaired += ch;\n          escaped = false;\n        } else if (ch === '\\\\') {\n          repaired += ch;\n          escaped = true;\n        } else if (ch === '\"') {\n          repaired += ch;\n          inString = false;\n        } else if (ch === '\\n') {\n          repaired += '\\\\n';\n        } else if (ch === '\\r') {\n          repaired += '\\\\r';\n        } else if (ch === '\\t') {\n          repaired += '\\\\t';\n        } else if (ch.charCodeAt(0) < 32) {\n          repaired += ' ';\n        } else {\n          repaired += ch;\n        }\n      } else {\n        if (ch === '\"') {\n          repaired += ch;\n          inString = true;\n        } else if (ch === ',') {\n          let j = i + 1;\n          while (j < cleaned.length && /\\s/.test(cleaned[j])) j++;\n          if (cleaned[j] === ']' || cleaned[j] === '}') {\n            continue;\n          }\n          repaired += ch;\n        } else {\n          repaired += ch;\n        }\n      }\n    }\n    return JSON.parse(repaired);\n  }\n}\n\nlet generated = {};\ntry {\n  const parts = geminiResp?.candidates?.[0]?.content?.parts || [];\n  const answerPart = [...parts].reverse().find((p) => !p.thought && typeof p.text === 'string');\n  generated = parseGeminiJson(answerPart?.text || '{}');\n} catch (e) {\n  throw new Error(`Failed to parse Gemini CV JSON: ${e.message}`);\n}\n\nfunction renderCvHtml(cv, langCode) {\n  const labels = LABELS_BY_LANG[langCode] || LABELS_BY_LANG.en;\n\n  const skillRows = (cv.skill_groups || []).map((sg) =>\n    `<div class=\"skill-row\"><span class=\"skill-cat\">${esc(sg.category)}:</span> <span class=\"skill-list\">${(sg.skills || []).map(esc).join(' • ')}</span></div>`\n  ).join('\\n');\n\n  const expBlocks = (cv.experience || []).map((exp) => {\n    const bullets = (exp.bullets || []).map((b) => `<li>${esc(b)}</li>`).join('\\n');\n    return `\n      <div class=\"exp-item\">\n        <div class=\"exp-header\">\n          <div>\n            <span class=\"exp-role\">${esc(exp.role)}</span>\n            <span class=\"exp-company\"> — ${esc(exp.company)}</span>\n          </div>\n          <div class=\"exp-meta\">${esc(exp.period)} | ${esc(exp.location)}</div>\n        </div>\n        <ul class=\"exp-bullets\">${bullets}</ul>\n      </div>`;\n  }).join('\\n');\n\n  const eduBlocks = (cv.education || []).map((ed) => `\n    <div class=\"edu-item\">\n      <div class=\"exp-header\">\n        <div><strong>${esc(ed.degree)}</strong> — ${esc(ed.institution)}</div>\n        <div class=\"exp-meta\">${esc(ed.period)}</div>\n      </div>\n      ${ed.details ? `<div class=\"edu-details\">${esc(ed.details)}</div>` : ''}\n    </div>`\n  ).join('\\n');\n\n  const certList = (cv.certifications || []).map((c) => `<li>${esc(c)}</li>`).join('\\n');\n  const langList = (cv.languages || []).map((l) => `<span class=\"lang-item\">${esc(l)}</span>`).join(' &nbsp;|&nbsp; ');\n\n  return `<!DOCTYPE html>\n<html lang=\"${esc(langCode)}\">\n<head>\n<meta charset=\"UTF-8\">\n<title>${esc(candidateName)} - CV (${esc(langCode.toUpperCase())})</title>\n<style>\n  @page { size: A4; margin: 12mm 14mm 12mm 14mm; }\n  * { box-sizing: border-box; }\n  body {\n    font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;\n    font-size: 10pt;\n    line-height: 1.42;\n    color: #1a202c;\n    margin: 0;\n    padding: 0;\n  }\n  .header {\n    border-bottom: 2px solid #1e3a8a;\n    padding-bottom: 8px;\n    margin-bottom: 10px;\n  }\n  .name {\n    font-size: 20pt;\n    font-weight: 700;\n    color: #0f172a;\n    margin: 0;\n    letter-spacing: 0.3px;\n  }\n  .headline {\n    font-size: 11pt;\n    font-weight: 600;\n    color: #1e3a8a;\n    margin: 3px 0 5px 0;\n  }\n  .contact {\n    font-size: 9pt;\n    color: #475569;\n  }\n  .contact a {\n    color: #1e3a8a;\n    text-decoration: none;\n  }\n  .section {\n    margin-top: 10px;\n  }\n  .section-title {\n    font-size: 10.5pt;\n    font-weight: 700;\n    text-transform: uppercase;\n    letter-spacing: 0.6px;\n    color: #1e3a8a;\n    border-bottom: 1px solid #cbd5e1;\n    padding-bottom: 2px;\n    margin-bottom: 6px;\n  }\n  .summary {\n    text-align: justify;\n    margin: 0;\n    color: #1e293b;\n  }\n  .skill-row {\n    margin-bottom: 3px;\n  }\n  .skill-cat {\n    font-weight: 700;\n    color: #0f172a;\n  }\n  .exp-item {\n    margin-bottom: 8px;\n    page-break-inside: avoid;\n  }\n  .exp-header {\n    display: flex;\n    justify-content: space-between;\n    align-items: baseline;\n    flex-wrap: wrap;\n  }\n  .exp-role {\n    font-weight: 700;\n    font-size: 10.3pt;\n    color: #0f172a;\n  }\n  .exp-company {\n    font-weight: 600;\n    color: #1e3a8a;\n  }\n  .exp-meta {\n    font-size: 9pt;\n    color: #475569;\n    font-style: italic;\n  }\n  .exp-bullets {\n    margin: 3px 0 0 0;\n    padding-left: 16px;\n  }\n  .exp-bullets li {\n    margin-bottom: 2.5px;\n  }\n  .edu-item {\n    margin-bottom: 5px;\n    page-break-inside: avoid;\n  }\n  .edu-details {\n    font-size: 9.5pt;\n    color: #334155;\n    margin-top: 2px;\n  }\n  .cert-list {\n    margin: 2px 0 0 0;\n    padding-left: 16px;\n  }\n  .two-col-footer {\n    display: flex;\n    justify-content: space-between;\n    gap: 20px;\n  }\n  .two-col-footer > div {\n    flex: 1;\n  }\n</style>\n</head>\n<body>\n  <div class=\"header\">\n    <h1 class=\"name\">${esc(candidateName)}</h1>\n    <div class=\"headline\">${esc(cv.target_headline || candidateHeadline)}</div>\n    <div class=\"contact\">\n      ${esc(candidateLocation)} &nbsp;|&nbsp;\n      <a href=\"mailto:${esc(candidateEmail)}\">${esc(candidateEmail)}</a> &nbsp;|&nbsp;\n      <a href=\"${esc(candidateLinkedinUrl)}\">${esc(candidateLinkedinDisplay)}</a>\n    </div>\n  </div>\n\n  <div class=\"section\">\n    <div class=\"section-title\">${labels.summary}</div>\n    <p class=\"summary\">${esc(cv.executive_summary)}</p>\n  </div>\n\n  <div class=\"section\">\n    <div class=\"section-title\">${labels.skills}</div>\n    ${skillRows}\n  </div>\n\n  <div class=\"section\">\n    <div class=\"section-title\">${labels.experience}</div>\n    ${expBlocks}\n  </div>\n\n  <div class=\"section\">\n    <div class=\"section-title\">${labels.education}</div>\n    ${eduBlocks}\n  </div>\n\n  <div class=\"section two-col-footer\">\n    <div>\n      <div class=\"section-title\">${labels.certs}</div>\n      <ul class=\"cert-list\">${certList}</ul>\n    </div>\n    <div>\n      <div class=\"section-title\">${labels.languages}</div>\n      <div>${langList}</div>\n    </div>\n  </div>\n</body>\n</html>`;\n}\n\nfunction renderCoverLetterHtml(text, langCode) {\n  const labels = LABELS_BY_LANG[langCode] || LABELS_BY_LANG.en;\n  const paragraphs = String(text || '')\n    .split(/\\n{2,}/)\n    .map((p) => p.trim())\n    .filter(Boolean)\n    .map((p) => `<p>${esc(p).replace(/\\n/g, '<br>')}</p>`)\n    .join('\\n');\n\n  const dateStr = new Date().toISOString().slice(0, 10);\n  const titleLabel = `${labels.clTitle} — ${job.title} (${job.company})`;\n\n  return `<!DOCTYPE html>\n<html lang=\"${esc(langCode)}\">\n<head>\n<meta charset=\"UTF-8\">\n<title>${esc(candidateName)} - ${esc(labels.clTitle)} (${esc(langCode.toUpperCase())})</title>\n<style>\n  @page { size: A4; margin: 18mm 20mm 18mm 20mm; }\n  body {\n    font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;\n    font-size: 10.5pt;\n    line-height: 1.55;\n    color: #1a202c;\n  }\n  .header {\n    border-bottom: 2px solid #1e3a8a;\n    padding-bottom: 8px;\n    margin-bottom: 18px;\n  }\n  .name { font-size: 18pt; font-weight: 700; color: #0f172a; margin: 0; }\n  .contact { font-size: 9.5pt; color: #475569; margin-top: 4px; }\n  .subject { font-weight: 700; color: #1e3a8a; margin: 14px 0; font-size: 11pt; }\n  p { margin: 0 0 11px 0; text-align: justify; }\n</style>\n</head>\n<body>\n  <div class=\"header\">\n    <h1 class=\"name\">${esc(candidateName)}</h1>\n    <div class=\"contact\">${esc(candidateLocation)} &nbsp;|&nbsp; ${esc(candidateEmail)} &nbsp;|&nbsp; ${esc(candidateLinkedinDisplay)}</div>\n  </div>\n  <div>${esc(dateStr)}</div>\n  <div class=\"subject\">${esc(titleLabel)}</div>\n  ${paragraphs}\n</body>\n</html>`;\n}\n\nconst datePrefix = new Date().toISOString().slice(0, 10);\nconst companySlug = safeSlug(job.company, 25);\nconst baseDir = (config.nas_output_dir || '/home/node/.n8n').replace(/\\/+$/, '');\nconst folderPath = baseDir;\n\nconst docsToRender = [\n  {\n    doc_type: 'CV',\n    lang: 'EN',\n    slot: 'en',\n    pdf_filename: `${candidateSlug}_CV_EN_${companySlug}.pdf`,\n    html: renderCvHtml(generated.cv_en || {}, 'en')\n  }\n];\n\nconst secCv = generated.cv_secondary || generated.cv_hu;\nif (hasSecondary && secCv) {\n  docsToRender.push({\n    doc_type: 'CV',\n    lang: secCode,\n    slot: 'secondary',\n    pdf_filename: `${candidateSlug}_CV_${secCode}_${companySlug}.pdf`,\n    html: renderCvHtml(secCv, rawSec)\n  });\n}\n\nif (job.generate_cover_letter && generated.cover_letter_en) {\n  docsToRender.push({\n    doc_type: 'CoverLetter',\n    lang: 'EN',\n    slot: 'en',\n    pdf_filename: `${candidateSlug}_CoverLetter_EN_${companySlug}.pdf`,\n    html: renderCoverLetterHtml(generated.cover_letter_en, 'en')\n  });\n  const secCl = generated.cover_letter_secondary || generated.cover_letter_hu;\n  if (hasSecondary && secCl) {\n    docsToRender.push({\n      doc_type: 'CoverLetter',\n      lang: secCode,\n      slot: 'secondary',\n      pdf_filename: `${candidateSlug}_CoverLetter_${secCode}_${companySlug}.pdf`,\n      html: renderCoverLetterHtml(secCl, rawSec)\n    });\n  }\n}\n\nconst outputItems = [];\nfor (const doc of docsToRender) {\n  const htmlBin = await this.helpers.prepareBinaryData(\n    Buffer.from(doc.html, 'utf8'),\n    'index.html',\n    'text/html'\n  );\n  outputItems.push({\n    json: {\n      ...job,\n      doc_type: doc.doc_type,\n      doc_lang: doc.lang,\n      doc_slot: doc.slot,\n      pdf_filename: doc.pdf_filename,\n      folder_path: folderPath,\n      save_path: `${baseDir}/JobFinder_${datePrefix}_${doc.pdf_filename}`,\n      tailoring_notes: generated.tailoring_notes || []\n    },\n    binary: {\n      index_html: htmlBin\n    }\n  });\n}\n\nreturn outputItems;"
+      },
+      "id": "9674abf2-4f7b-569c-b437-d0314015ceb2",
+      "name": "Render ATS HTML Documents",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4040,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Initialize Profile and Settings').first().json.gotenberg_url }}/forms/chromium/convert/html",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "files",
+              "inputDataFieldName": "index_html"
+            },
+            {
+              "name": "marginTop",
+              "value": "0.4"
+            },
+            {
+              "name": "marginBottom",
+              "value": "0.4"
+            },
+            {
+              "name": "marginLeft",
+              "value": "0.45"
+            },
+            {
+              "name": "marginRight",
+              "value": "0.45"
+            },
+            {
+              "name": "printBackground",
+              "value": "true"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "pdf_data"
+            }
+          },
+          "timeout": 30000
+        }
+      },
+      "id": "5822cc91-d54e-57c3-afad-b19f88016af1",
+      "name": "Convert HTML to PDF Gotenberg",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4260,
+        40
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const config = $('Initialize Profile and Settings').first().json;\nconst items = $input.all();\nconst out = [];\nconst fallbackName = `${config.candidate_file_slug || 'Candidate'}_CV.pdf`;\n\nfor (let i = 0; i < items.length; i++) {\n  const item = items[i];\n  const meta = item.json || {};\n  const pdfBin = item.binary && item.binary.pdf_data;\n  if (!pdfBin) {\n    throw new Error(`Gotenberg did not return pdf_data binary for ${meta.pdf_filename}`);\n  }\n  out.push({\n    json: meta,\n    binary: {\n      pdf_data: {\n        ...pdfBin,\n        fileName: meta.pdf_filename || fallbackName,\n        mimeType: 'application/pdf',\n        fileExtension: 'pdf'\n      }\n    }\n  });\n}\n\nreturn out;"
+      },
+      "id": "1d60c65f-153c-59bb-b8ac-749aa77db414",
+      "name": "Set PDF Filename and Metadata",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4480,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "={{ $json.save_path }}",
+        "dataPropertyName": "pdf_data",
+        "options": {}
+      },
+      "id": "d04bee21-595d-57cf-b359-852f26df1e61",
+      "name": "Save PDF to NAS Folder",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        4700,
+        180
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const items = $input.all();\nif (!items.length) return [];\n\nconst firstMeta = items[0].json || {};\nconst cvEn = items.find((i) => i.json.doc_type === 'CV' && i.json.doc_slot === 'en');\nconst cvSecondary = items.find((i) => i.json.doc_type === 'CV' && i.json.doc_slot === 'secondary');\nconst clEn = items.find((i) => i.json.doc_type === 'CoverLetter' && i.json.doc_slot === 'en');\nconst clSecondary = items.find((i) => i.json.doc_type === 'CoverLetter' && i.json.doc_slot === 'secondary');\n\nconst langLabel = cvSecondary ? `EN + ${cvSecondary.json.doc_lang}` : 'EN';\nconst hoText = firstMeta.home_office_days_per_week >= 0\n  ? `${firstMeta.work_mode} (${firstMeta.home_office_days_per_week}d/wk HO, max ${firstMeta.office_days_per_week}d office)`\n  : `${firstMeta.work_mode} (${firstMeta.location_notes || 'check HO details'})`;\n\nconst rubricLine = `Role ${firstMeta.role_fit_score || 0}/35 | Tech ${firstMeta.tech_stack_score || 0}/30 | Security ${firstMeta.job_security_score || 0}/20 | Loc/Comp ${firstMeta.location_and_comp_score || 0}/15`;\nconst matchingSkills = (firstMeta.key_matching_skills || []).slice(0, 8).join(', ') || 'See description';\nconst tailoringBullets = (firstMeta.tailoring_notes || []).slice(0, 3).map((n) => `- ${n}`).join('\\n') || `- Tailored to job requirements (${langLabel})`;\n\nconst lines = [\n  `@everyone 🎯 **Strong Job Match (${firstMeta.match_score}/100) — CV Generated!** — **${firstMeta.title}** at **${firstMeta.company}**`,\n  `📂 **Category:** **${firstMeta.matched_track}** | **Source:** ${firstMeta.source} | **Contract:** ${firstMeta.contract_type || 'Unknown'}`,\n  firstMeta.verification_banner ? `**${firstMeta.verification_banner}**` : '',\n  `**Rubric:** ${rubricLine}`,\n  `**Location / Mode:** ${firstMeta.location} — ${hoText}`,\n  `**Salary:** ${firstMeta.salary_info || 'Not disclosed'}`,\n  firstMeta.ai_proof_assessment ? `**AI-Proof & Security:** ${String(firstMeta.ai_proof_assessment).slice(0, 180)}` : '',\n  ``,\n  `**Why It Fits You:**`,\n  (firstMeta.fit_summary || 'Strong match').slice(0, 300),\n  `**Key Matching Skills:** ${matchingSkills.slice(0, 180)}`,\n  `**CV Tailoring Highlights (${langLabel} attached):**`,\n  tailoringBullets.slice(0, 240),\n  `**Saved Output Folder:** \\`${firstMeta.folder_path}\\``,\n  `**Direct Apply Link:** ${firstMeta.url}`\n].filter((l) => l !== '');\n\nconst discordContent = lines.join('\\n').slice(0, 1900);\n\nconst out = [];\n\nif (cvEn && cvEn.binary?.pdf_data) {\n  const binary = { doc_en: cvEn.binary.pdf_data };\n  if (cvSecondary && cvSecondary.binary?.pdf_data) {\n    binary.doc_secondary = cvSecondary.binary.pdf_data;\n  }\n  out.push({\n    json: {\n      job_id: firstMeta.job_id,\n      discord_content: discordContent\n    },\n    binary\n  });\n}\n\nif (clEn && clEn.binary?.pdf_data) {\n  const clLabel = clSecondary ? `EN + ${clSecondary.json.doc_lang}` : 'EN';\n  const clContent = `✉️ **Tailored Cover Letters (${clLabel})** for **${firstMeta.title}** at **${firstMeta.company}** *(posting requested a cover letter)*\\n${firstMeta.url}`.slice(0, 1900);\n  const clBinary = { doc_en: clEn.binary.pdf_data };\n  if (clSecondary && clSecondary.binary?.pdf_data) {\n    clBinary.doc_secondary = clSecondary.binary.pdf_data;\n  }\n  out.push({\n    json: {\n      job_id: firstMeta.job_id,\n      discord_content: clContent\n    },\n    binary: clBinary\n  });\n}\n\nreturn out;"
+      },
+      "id": "1d1b9d8f-bba9-5d95-81fc-bddb04916c74",
+      "name": "Bundle PDFs and Discord Embed",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4920,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "operation": "sendLegacy",
+        "content": "={{ $json.discord_content }}",
+        "options": {},
+        "files": {
+          "values": [
+            {
+              "inputFieldName": "doc_en"
+            },
+            {
+              "inputFieldName": "doc_secondary"
+            }
+          ]
+        }
+      },
+      "id": "59dae6fa-9e9a-5c82-af30-cf976795ab19",
+      "name": "Send Strong Match PDFs to Discord",
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        5140,
+        40
+      ],
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "discord-webhook-cred",
+          "name": "Discord Webhook account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const first = $input.first();\nreturn [{\n  json: {\n    completed_job_id: first?.json?.job_id || 'done'\n  }\n}];"
+      },
+      "id": "c741ff36-bf0a-5018-b4fb-ea268978ede6",
+      "name": "Return 1 Item to Loop",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5360,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const job = $input.first().json || {};\nconst hoText = job.home_office_days_per_week >= 0\n  ? `${job.work_mode} (${job.home_office_days_per_week}d/wk HO, max ${job.office_days_per_week}d office)`\n  : `${job.work_mode} (${job.location_notes || 'unspecified'})`;\n\nconst rubricLine = `Role ${job.role_fit_score || 0}/35 | Tech ${job.tech_stack_score || 0}/30 | Security ${job.job_security_score || 0}/20 | Loc/Comp ${job.location_and_comp_score || 0}/15`;\nconst statusBanner = job.verification_banner\n  ? `**${job.verification_banner}**`\n  : '';\n\nconst lines = [\n  `🤔 **Maybe Match (${job.match_score}/100)** — **${job.title}** at **${job.company}** *(No CV generated)*`,\n  `📂 **Category:** **${job.matched_track}** | **Source:** ${job.source} | **Contract:** ${job.contract_type || 'Unknown'}`,\n  statusBanner,\n  `**Rubric:** ${rubricLine}`,\n  `**Location / Mode:** ${job.location} — ${hoText}`,\n  `**Salary:** ${job.salary_info || 'Not disclosed'}`,\n  job.ai_proof_assessment ? `**AI-Proof & Security:** ${String(job.ai_proof_assessment).slice(0, 180)}` : '',\n  `**Assessment:** ${(job.fit_summary || 'Partial match').slice(0, 350)}`,\n  `**Link:** ${job.url}`\n].filter((l) => l !== '');\n\nreturn [{\n  json: {\n    job_id: job.job_id,\n    discord_maybe_content: lines.join('\\n').slice(0, 1900)\n  }\n}];"
+      },
+      "id": "49774469-20a3-5c0d-819d-94651fecf622",
+      "name": "Build Maybe Discord Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3380,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "operation": "sendLegacy",
+        "content": "={{ $json.discord_maybe_content }}",
+        "options": {}
+      },
+      "id": "fbc1c956-f619-5580-9584-18230137efa0",
+      "name": "Send Maybe Discord Alert",
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        3600,
+        260
+      ],
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "discord-webhook-cred",
+          "name": "Discord Webhook account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Daily 0730 Trigger": {
+      "main": [
+        [
+          {
+            "node": "Initialize Profile and Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual Test Trigger": {
+      "main": [
+        [
+          {
+            "node": "Initialize Profile and Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Initialize Profile and Settings": {
+      "main": [
+        [
+          {
+            "node": "Load Seen Jobs File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Seen Jobs File": {
+      "main": [
+        [
+          {
+            "node": "Build LinkedIn Queries",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Build NoFluffJobs Queries",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build LinkedIn Queries": {
+      "main": [
+        [
+          {
+            "node": "Fetch LinkedIn Search Cards",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch LinkedIn Search Cards": {
+      "main": [
+        [
+          {
+            "node": "Parse LinkedIn Cards",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse LinkedIn Cards": {
+      "main": [
+        [
+          {
+            "node": "Merge Job Sources",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build NoFluffJobs Queries": {
+      "main": [
+        [
+          {
+            "node": "Fetch NoFluffJobs Search API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch NoFluffJobs Search API": {
+      "main": [
+        [
+          {
+            "node": "Parse NoFluffJobs Postings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse NoFluffJobs Postings": {
+      "main": [
+        [
+          {
+            "node": "Merge Job Sources",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Job Sources": {
+      "main": [
+        [
+          {
+            "node": "Combine and Deduplicate Candidates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine and Deduplicate Candidates": {
+      "main": [
+        [
+          {
+            "node": "Any New Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Any New Jobs": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Candidate Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Loop Over Candidate Jobs": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Fetch Full Job Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Full Job Details": {
+      "main": [
+        [
+          {
+            "node": "Extract Clean Job Description and Build Scoring Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Clean Job Description and Build Scoring Prompt": {
+      "main": [
+        [
+          {
+            "node": "Rate Limit Pause Scoring",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rate Limit Pause Scoring": {
+      "main": [
+        [
+          {
+            "node": "Gemini Score and Filter Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Score and Filter Job": {
+      "main": [
+        [
+          {
+            "node": "Parse Score and Update Seen Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Score and Update Seen Jobs": {
+      "main": [
+        [
+          {
+            "node": "Route by Match Tier",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Save Updated Seen Jobs to Disk",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Log to n8n Data Table Optional",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Match Tier": {
+      "main": [
+        [
+          {
+            "node": "Build CV and Cover Letter Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Maybe Discord Payload",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Candidate Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build CV and Cover Letter Prompt": {
+      "main": [
+        [
+          {
+            "node": "Rate Limit Pause CV Gen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rate Limit Pause CV Gen": {
+      "main": [
+        [
+          {
+            "node": "Gemini Generate Tailored CV and CL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Generate Tailored CV and CL": {
+      "main": [
+        [
+          {
+            "node": "Render ATS HTML Documents",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Render ATS HTML Documents": {
+      "main": [
+        [
+          {
+            "node": "Convert HTML to PDF Gotenberg",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert HTML to PDF Gotenberg": {
+      "main": [
+        [
+          {
+            "node": "Set PDF Filename and Metadata",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set PDF Filename and Metadata": {
+      "main": [
+        [
+          {
+            "node": "Bundle PDFs and Discord Embed",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Save PDF to NAS Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Bundle PDFs and Discord Embed": {
+      "main": [
+        [
+          {
+            "node": "Send Strong Match PDFs to Discord",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Strong Match PDFs to Discord": {
+      "main": [
+        [
+          {
+            "node": "Return 1 Item to Loop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Return 1 Item to Loop": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Candidate Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Maybe Discord Payload": {
+      "main": [
+        [
+          {
+            "node": "Send Maybe Discord Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Maybe Discord Alert": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Candidate Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Budapest",
+    "saveManualExecutions": true
+  },
+  "versionId": "53ace75d-7f93-4a63-b6ac-bdfcb22c7b62",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "id": "jobfinder-ai-workflow",
+  "tags": []
+}
