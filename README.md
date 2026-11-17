@@ -7,6 +7,8 @@
 
 A self-hosted, **100% free-stack n8n job-hunting agent** that scrapes LinkedIn and NoFluffJobs, filters out mismatches before spending API tokens, scores postings with **Google Gemini** (`gemini-3.5-flash-lite`) against a deterministic rubric and strict office/location gate, generates **ATS-friendly PDF CVs & Cover Letters** via **Gotenberg**, and sends targeted alerts to **Discord**.
 
+> **Not technical?** Use [**JobFinder Easy**](jobfinder-easy/README.md) instead. It runs inside a Google Sheet with nothing to install and no coding: you answer a 5-step setup window, tick the job sites you want (LinkedIn, Profession.hu, NoFluffJobs, Jooble), and get good matches by email with a tailored CV attached. Works in English and Hungarian (magyarul).
+
 ---
 
 ## Architecture
@@ -63,6 +65,7 @@ flowchart LR
 | [`docker-compose.yml`](docker-compose.yml) | Yes | Full self-hosted stack (`n8n` + `gotenberg` on a shared Docker network). |
 | [`docker/docker-compose.gotenberg.yml`](docker/docker-compose.gotenberg.yml) | Yes | Standalone Gotenberg Compose file (with CasaOS metadata) for existing n8n setups. |
 | [`SETUP_GUIDE.md`](SETUP_GUIDE.md) | Yes | Step-by-step installation, n8n credentials setup, and optional Data Table instructions. |
+| [`jobfinder-easy/`](jobfinder-easy/README.md) | Yes | Beginner-friendly Google Sheets + Apps Script version (no install, no code, switchable job sites). |
 | `config.local.json`, `master_profile_*.md`, `*.local.json`, `*.pdf` | **Gitignored** | Your private resume data, local IP configs, and generated personal workflow stay untracked on disk. |
 
 ---
